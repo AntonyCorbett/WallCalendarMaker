@@ -16,6 +16,8 @@ public class MakerOptions
 
     public RowMode RowMode { get; set; } = RowMode.FiveRows;
 
+    public DeadBoxMode DeadBoxMode { get; set; } = DeadBoxMode.Opacity25;
+
     public void Validate()
     {
 #pragma warning disable S3928 // Parameter names used into ArgumentException constructors should match an existing one 

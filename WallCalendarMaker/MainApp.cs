@@ -28,8 +28,9 @@ internal sealed class MainApp
                 opts.MonthDefinition.Year = 2023;
                 opts.MonthDefinition.Month = 10;
                 opts.MonthDefinition.FirstDayOfWeek = DayOfWeek.Monday;
-                opts.RowMode = RowMode.FiveRows;
+                opts.RowMode = RowMode.SixRows;
                 opts.FontName = "Calibri";
+                opts.DeadBoxMode = DeadBoxMode.Invisible;
             });
 
             maker.Generate("myfile.svg");

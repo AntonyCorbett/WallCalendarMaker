@@ -26,7 +26,7 @@ public class Maker : IMaker
         doc.Font = Options.FontName;
         doc.FontSize = new SvgUnit(SvgUnitType.Point, Options.FontPointSize);
 
-        var boxGroup = new SvgGroup();
+        var boxGroup = new SvgGroup { ID = "BoxGroup" };
 
         var numRows = GetRowCount();
 
@@ -52,6 +52,11 @@ public class Maker : IMaker
 
                 var boxId = $"Box{boxNum++}";
                 var box = CreateSingleBox(x, y, individualBoxWidth, individualBoxHeight, individualBoxMargin, boxId);
+
+                // some custom attributes
+                box.CustomAttributes.Add(BoxAttributes.Column, col.ToString());
+                box.CustomAttributes.Add(BoxAttributes.Row, row.ToString());
+
                 boxGroup.Children.Add(box);
             }
         }
@@ -60,8 +65,81 @@ public class Maker : IMaker
 
         AddDayNames(doc, boxGroup);
         AddDayNumbers(doc, boxGroup, individualBoxMargin);
+        SpecifyDeadBoxOpacity(boxGroup);
 
         return doc;
+    }
+
+    private void SpecifyDeadBoxOpacity(SvgGroup boxGroup)
+    {
+        foreach (var box in boxGroup.Children.OfType<SvgRectangle>())
+        {
+            if (!TryGetBoxDayNumber(box, out _)) // a dead box
+            {
+                switch (Options.DeadBoxMode)
+                {
+                    case DeadBoxMode.Visible:
+                        // do nothing
+                        break;
+                    case DeadBoxMode.Invisible:
+                        box.Visibility = "hidden";
+                        break;
+                    case DeadBoxMode.Opacity25:
+                        box.Opacity = 0.25F;
+                        break;
+                    case DeadBoxMode.Opacity50:
+                        box.Opacity = 0.50F;
+                        break;
+                    case DeadBoxMode.Opacity75:
+                        box.Opacity = 0.75F;
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
+        }
+    }
+
+    private static int GetBoxColumn(SvgRectangle box) => GetBoxIntegerValue(box, BoxAttributes.Column);
+
+    private static int GetBoxRow(SvgRectangle box) => GetBoxIntegerValue(box, BoxAttributes.Row);
+
+    private static bool TryGetBoxDayNumber(SvgRectangle box, out int result)
+    {
+        var rv = TryGetBoxIntegerValue(box, BoxAttributes.DayNumber, out var r);
+        result = r;
+        return rv;
+    }
+
+    private static bool TryGetBoxDayOfWeek(SvgRectangle box, out int result)
+    {
+        var rv = TryGetBoxIntegerValue(box, BoxAttributes.DayOfWeek, out var r);
+        result = r;
+        return rv;
+    }
+
+    private static int GetBoxIntegerValue(SvgRectangle box, string attributeKey)
+    {
+        if (!box.TryGetAttribute(attributeKey, out var value) ||
+            !int.TryParse(value, out var val))
+        {
+            throw new NotSupportedException("Could not find box attribute!");
+        }
+
+        return val;
+    }
+
+    private static bool TryGetBoxIntegerValue(SvgRectangle box, string attributeKey, out int result)
+    {
+        if (box.TryGetAttribute(attributeKey, out var valueStr) &&
+            int.TryParse(valueStr, out var val2))
+        {
+            result = val2;
+            return true;
+        }
+
+        result = 0;
+        return false;
     }
 
     private int GetRowCount()
@@ -82,7 +160,7 @@ public class Maker : IMaker
         var group = new SvgGroup { ID = "DayNumberGroup" };
 
         var dayNumber = 0;
-        var boxNumber = 0;
+
 #pragma warning disable S6562
         var firstDate = new DateTime(Options.MonthDefinition.Year, Options.MonthDefinition.Month, 1);
         var lastDate = firstDate.AddMonths(1).AddDays(-1);
@@ -90,7 +168,7 @@ public class Maker : IMaker
 
         foreach (var box in boxGroup.Children.OfType<SvgRectangle>())
         {
-            var col = boxNumber % 7;
+            var col = GetBoxColumn(box);
             var dayOfWeek = CalculateDayOfWeek(col);
 
             if (dayNumber == 0 && firstDate.DayOfWeek == dayOfWeek)
@@ -104,12 +182,14 @@ public class Maker : IMaker
                 {
                     var numberText = CreateDayNumberText(dayNumber, box, boxMarginMillimeters, false);
                     group.Children.Add(numberText);
+                    
+                    // specify box attributes
+                    box.CustomAttributes.Add(BoxAttributes.DayNumber, dayNumber.ToString());
+                    box.CustomAttributes.Add(BoxAttributes.DayOfWeek, dayOfWeek.ToString());
                 }
 
                 ++dayNumber;
             }
-
-            ++boxNumber;
         }
 
         if (dayNumber <= lastDate.Day)
@@ -152,10 +232,10 @@ public class Maker : IMaker
     private void AddDayNames(SvgDocument doc, SvgGroup boxGroup)
     {
         var group = new SvgGroup { ID = "DayNameGroup" };
-
-        var col = 0;
+        
         foreach (var box in boxGroup.Children.Take(7).OfType<SvgRectangle>())
         {
+            var col = GetBoxColumn(box);
             var dayOfWeek = (int)CalculateDayOfWeek(col);
             var dayOfWeekString = CultureInfo.CurrentCulture.DateTimeFormat.DayNames[dayOfWeek];
 
@@ -165,8 +245,6 @@ public class Maker : IMaker
                 X = new SvgUnitCollection {box.X},
                 Y = new SvgUnitCollection {box.Y - box.FontSize}
             });
-
-            ++col;
         }
 
         doc.Children.Add(group);
