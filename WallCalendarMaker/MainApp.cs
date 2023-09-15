@@ -29,8 +29,15 @@ internal sealed class MainApp
                 opts.MonthDefinition.Month = 10;
                 opts.MonthDefinition.FirstDayOfWeek = DayOfWeek.Monday;
                 opts.RowMode = RowMode.SixRows;
-                opts.FontName = "Calibri";
+
+                // fonts
+                opts.FontNameDays = "Calibri";
+                opts.FontPointSizeDays = 20;
+                opts.FontNameNumbers = "Calibri";
+                opts.FontPointSizeNumbers = 18;
+
                 opts.DeadBoxMode = DeadBoxMode.Invisible;
+                opts.LiveBoxMode = LiveBoxMode.Opacity50;
             });
 
             maker.Generate("myfile.svg");

@@ -10,13 +10,19 @@ public class MakerOptions
 
     public MonthDefinition MonthDefinition { get; set; } = new();
 
-    public string FontName { get; set; } = "Arial";
+    public string FontNameDays { get; set; } = "Arial";
 
-    public float FontPointSize { get; set; } = 10.0F;
+    public float FontPointSizeDays { get; set; } = 10.0F;
+
+    public string FontNameNumbers { get; set; } = "Arial";
+
+    public float FontPointSizeNumbers { get; set; } = 10.0F;
 
     public RowMode RowMode { get; set; } = RowMode.FiveRows;
 
     public DeadBoxMode DeadBoxMode { get; set; } = DeadBoxMode.Opacity25;
+
+    public LiveBoxMode LiveBoxMode { get; set; } = LiveBoxMode.Visible;
 
     public void Validate()
     {

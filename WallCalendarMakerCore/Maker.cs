@@ -23,8 +23,8 @@ public class Maker : IMaker
     public SvgDocument Generate()
     {
         var doc = CreateBlankDocument();
-        doc.Font = Options.FontName;
-        doc.FontSize = new SvgUnit(SvgUnitType.Point, Options.FontPointSize);
+        //doc.Font = Options.FontNameDays;
+        //doc.FontSize = new SvgUnit(SvgUnitType.Point, Options.FontPointSizeDays);
 
         var boxGroup = new SvgGroup { ID = "BoxGroup" };
 
@@ -65,9 +65,49 @@ public class Maker : IMaker
 
         AddDayNames(doc, boxGroup);
         AddDayNumbers(doc, boxGroup, individualBoxMargin);
+        SpecifyLiveBoxOpacity(boxGroup);
         SpecifyDeadBoxOpacity(boxGroup);
 
         return doc;
+    }
+
+    private void SpecifyLiveBoxOpacity(SvgGroup boxGroup)
+    {
+        foreach (var box in boxGroup.Children.OfType<SvgRectangle>())
+        {
+            if (TryGetBoxDayNumber(box, out _)) // a live box
+            {
+                switch (Options.LiveBoxMode)
+                {
+                    case LiveBoxMode.Visible:
+                        // do nothing
+                        break;
+                    case LiveBoxMode.Opacity5:
+                        box.Opacity = 0.05F;
+                        break;
+                    case LiveBoxMode.Opacity10:
+                        box.Opacity = 0.1F;
+                        break;
+                    case LiveBoxMode.Opacity25:
+                        box.Opacity = 0.25F;
+                        break;
+                    case LiveBoxMode.Opacity50:
+                        box.Opacity = 0.50F;
+                        break;
+                    case LiveBoxMode.Opacity75:
+                        box.Opacity = 0.75F;
+                        break;
+                    case LiveBoxMode.Opacity85:
+                        box.Opacity = 0.85F;
+                        break;
+                    case LiveBoxMode.Opacity95:
+                        box.Opacity = 0.95F;
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
+        }
     }
 
     private void SpecifyDeadBoxOpacity(SvgGroup boxGroup)
@@ -182,7 +222,7 @@ public class Maker : IMaker
                 {
                     var numberText = CreateDayNumberText(dayNumber, box, boxMarginMillimeters, false);
                     group.Children.Add(numberText);
-                    
+
                     // specify box attributes
                     box.CustomAttributes.Add(BoxAttributes.DayNumber, dayNumber.ToString());
                     box.CustomAttributes.Add(BoxAttributes.DayOfWeek, dayOfWeek.ToString());
@@ -212,10 +252,15 @@ public class Maker : IMaker
         doc.Children.Add(group);
     }
 
-    private static SvgText CreateDayNumberText(
+    private SvgText CreateDayNumberText(
         int dayNumber, SvgRectangle box, float boxMarginMillimeters, bool isOverflow)
     {
-        var numberText = new SvgText(dayNumber.ToString());
+        var numberText = new SvgText(dayNumber.ToString())
+        {
+            Font = Options.FontNameNumbers,
+            FontSize = new SvgUnit(SvgUnitType.Point, Options.FontPointSizeNumbers)
+        };
+
         numberText.ID = $"DayNumber{dayNumber}";
         numberText.X = new SvgUnitCollection
         {
@@ -224,7 +269,7 @@ public class Maker : IMaker
             new SvgUnit(SvgUnitType.Pixel, numberText.Bounds.Width)
         };
 
-        numberText.Y = new SvgUnitCollection { box.Y + box.FontSize + (isOverflow ? box.Height / 2 : 0)};
+        numberText.Y = new SvgUnitCollection { box.Y + numberText.FontSize + (isOverflow ? box.Height / 2 : 0)};
 
         return numberText;
     }
@@ -239,12 +284,17 @@ public class Maker : IMaker
             var dayOfWeek = (int)CalculateDayOfWeek(col);
             var dayOfWeekString = CultureInfo.CurrentCulture.DateTimeFormat.DayNames[dayOfWeek];
 
-            group.Children.Add(new SvgText(dayOfWeekString)
+            var s = new SvgText(dayOfWeekString)
             {
                 ID = $"DayName{dayOfWeek}", // do not localise day name here
-                X = new SvgUnitCollection {box.X},
-                Y = new SvgUnitCollection {box.Y - box.FontSize}
-            });
+                Font = Options.FontNameDays,
+                FontSize = Options.FontPointSizeDays
+            };
+
+            s.X = new SvgUnitCollection {box.X};
+            s.Y = new SvgUnitCollection {box.Y - s.FontSize};
+
+            group.Children.Add(s);
         }
 
         doc.Children.Add(group);
@@ -267,7 +317,7 @@ public class Maker : IMaker
             Height = new SvgUnit(SvgUnitType.Millimeter, heightMillimeters - boxMargin),
             Fill = new SvgColourServer(Color.White),
             Stroke = new SvgColourServer(Color.Black),
-            StrokeWidth = new SvgUnit(SvgUnitType.Millimeter, 0.2f)
+            StrokeWidth = new SvgUnit(SvgUnitType.Millimeter, 0.2f),
         };
     }
 
