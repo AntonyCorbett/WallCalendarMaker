@@ -1,12 +1,9 @@
-﻿using Svg;
-
-namespace WallCalendarMakerCore.CommonDocuments;
+﻿namespace WallCalendarMakerCore.CommonDocuments;
 
 internal class A5LandscapeDocument : CommonDocument
 {
-    public A5LandscapeDocument()
+    public A5LandscapeDocument(bool drawMargin, float xMarginMillimeters, float yMarginMillimeters)
+        : base(148.5F, 210F, drawMargin, xMarginMillimeters, yMarginMillimeters)
     {
-        Height = new SvgUnit(SvgUnitType.Millimeter, 148.5F);
-        Width = new SvgUnit(SvgUnitType.Millimeter, 210);
     }
 }

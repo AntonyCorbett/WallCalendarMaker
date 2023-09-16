@@ -32,12 +32,14 @@ internal sealed class MainApp
 
                 // fonts
                 opts.FontNameDays = "Calibri";
-                opts.FontPointSizeDays = 20;
+                opts.FontPointSizeDays = 18;
                 opts.FontNameNumbers = "Calibri";
                 opts.FontPointSizeNumbers = 18;
 
                 opts.DeadBoxMode = DeadBoxMode.Invisible;
                 opts.LiveBoxMode = LiveBoxMode.Opacity50;
+
+                opts.DrawMargin = true;
             });
 
             maker.Generate("myfile.svg");

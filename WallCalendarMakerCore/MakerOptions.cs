@@ -24,6 +24,8 @@ public class MakerOptions
 
     public LiveBoxMode LiveBoxMode { get; set; } = LiveBoxMode.Visible;
 
+    public bool DrawMargin { get; set; }
+
     public void Validate()
     {
 #pragma warning disable S3928 // Parameter names used into ArgumentException constructors should match an existing one 

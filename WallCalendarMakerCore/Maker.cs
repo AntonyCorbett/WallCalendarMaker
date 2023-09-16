@@ -23,12 +23,12 @@ public class Maker : IMaker
     public SvgDocument Generate()
     {
         var doc = CreateBlankDocument();
-        //doc.Font = Options.FontNameDays;
-        //doc.FontSize = new SvgUnit(SvgUnitType.Point, Options.FontPointSizeDays);
 
         var boxGroup = new SvgGroup { ID = "BoxGroup" };
 
         var numRows = GetRowCount();
+
+        var dayNameHeightAllowance = GetDayNameHeightAllowance();
 
         var outlineBoxGroupWidth = doc.Width.Value - (2 * Options.XMarginMillimeters);
         var outlineBoxGroupHeight = doc.Height.Value - (2 * Options.YMarginMillimeters);
@@ -69,6 +69,17 @@ public class Maker : IMaker
         SpecifyDeadBoxOpacity(boxGroup);
 
         return doc;
+    }
+
+    private SvgUnit GetDayNameHeightAllowance()
+    {
+        var f = new SvgFont
+        {
+            Font = Options.FontNameDays,
+            FontSize = new SvgUnit(SvgUnitType.Point, Options.FontPointSizeDays)
+        };
+
+        return f.FontSize;
     }
 
     private void SpecifyLiveBoxOpacity(SvgGroup boxGroup)
@@ -327,9 +338,9 @@ public class Maker : IMaker
         {
             ID = "OutlineBox",
             X = new SvgUnit(SvgUnitType.Millimeter, Options.XMarginMillimeters),
-            Y = new SvgUnit(SvgUnitType.Millimeter, Options.YMarginMillimeters),
+            Y = new SvgUnit(SvgUnitType.Millimeter, Options.YMarginMillimeters + 10),
             Width = new SvgUnit(SvgUnitType.Millimeter, widthMillimeters),
-            Height = new SvgUnit(SvgUnitType.Millimeter, heightMillimeters),
+            Height = new SvgUnit(SvgUnitType.Millimeter, heightMillimeters - 10),
             Fill = new SvgColourServer(Color.Azure),
         };
     }
@@ -339,13 +350,13 @@ public class Maker : IMaker
         switch (Options.PageSize)
         {
             case PageSize.A3:
-                return new A3LandscapeDocument();
+                return new A3LandscapeDocument(Options.DrawMargin, Options.XMarginMillimeters, Options.YMarginMillimeters);
 
             case PageSize.A4:
-                return new A4LandscapeDocument();
+                return new A4LandscapeDocument(Options.DrawMargin, Options.XMarginMillimeters, Options.YMarginMillimeters);
 
             case PageSize.A5:
-                return new A5LandscapeDocument();
+                return new A5LandscapeDocument(Options.DrawMargin, Options.XMarginMillimeters, Options.YMarginMillimeters);
 
             default:
                 throw new NotImplementedException();
