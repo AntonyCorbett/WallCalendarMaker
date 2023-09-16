@@ -28,12 +28,12 @@ public class Maker : IMaker
 
         var numRows = GetRowCount();
 
-        var dayNameHeightAllowance = GetDayNameHeightAllowance();
+        var dayNameHeightMillimeter = GetDayNameHeightAllowanceMillimeters();
 
         var outlineBoxGroupWidth = doc.Width.Value - (2 * Options.XMarginMillimeters);
-        var outlineBoxGroupHeight = doc.Height.Value - (2 * Options.YMarginMillimeters);
+        var outlineBoxGroupHeight = doc.Height.Value - (2 * Options.YMarginMillimeters) - dayNameHeightMillimeter;
 
-        var outlineBox = CreateOutlineBox(outlineBoxGroupWidth, outlineBoxGroupHeight);
+        var outlineBox = CreateOutlineBox(outlineBoxGroupWidth, outlineBoxGroupHeight, dayNameHeightMillimeter);
 
         doc.Children.Add(outlineBox);
 
@@ -42,6 +42,7 @@ public class Maker : IMaker
         var individualBoxMargin = individualBoxHeight / 20;
         var marginAdjustment = individualBoxMargin / 2;
 
+        // draw day boxes...
         var boxNum = 1;
         foreach (var row in Enumerable.Range(0, numRows))
         {
@@ -67,57 +68,79 @@ public class Maker : IMaker
         AddDayNumbers(doc, boxGroup, individualBoxMargin);
         SpecifyLiveBoxOpacity(boxGroup);
         SpecifyDeadBoxOpacity(boxGroup);
+        SpecifyBoxCorners(boxGroup);
 
         return doc;
     }
 
-    private SvgUnit GetDayNameHeightAllowance()
+    private void SpecifyBoxCorners(SvgGroup boxGroup)
     {
-        var f = new SvgFont
+        foreach (var box in boxGroup.Children.OfType<SvgRectangle>().Where(IsLiveBox))
         {
-            Font = Options.FontNameDays,
-            FontSize = new SvgUnit(SvgUnitType.Point, Options.FontPointSizeDays)
-        };
+            switch (Options.BoxCornerMode)
+            {
+                case BoxCornerMode.Normal:
+                    break;
 
-        return f.FontSize;
+                case BoxCornerMode.Rounded:
+                    var radius = box.Width / 10;
+                    box.CornerRadiusX = radius;
+                    box.CornerRadiusY = radius;
+                    break;
+
+                default:
+                    throw new NotSupportedException();
+            }
+        }
+    }
+
+#pragma warning disable U2U1003 // Avoid declaring methods used in delegate constructors static
+    private static bool IsLiveBox(SvgRectangle box) => TryGetBoxDayNumber(box, out _);
+#pragma warning restore U2U1003 // Avoid declaring methods used in delegate constructors static
+
+    private float GetDayNameHeightAllowanceMillimeters()
+    {
+        return (float)((Options.FontPointSizeDays * 25.4) / 72.0);
     }
 
     private void SpecifyLiveBoxOpacity(SvgGroup boxGroup)
     {
-        foreach (var box in boxGroup.Children.OfType<SvgRectangle>())
+        foreach (var box in boxGroup.Children.OfType<SvgRectangle>().Where(IsLiveBox))
         {
-            if (TryGetBoxDayNumber(box, out _)) // a live box
-            {
-                switch (Options.LiveBoxMode)
-                {
-                    case LiveBoxMode.Visible:
-                        // do nothing
-                        break;
-                    case LiveBoxMode.Opacity5:
-                        box.Opacity = 0.05F;
-                        break;
-                    case LiveBoxMode.Opacity10:
-                        box.Opacity = 0.1F;
-                        break;
-                    case LiveBoxMode.Opacity25:
-                        box.Opacity = 0.25F;
-                        break;
-                    case LiveBoxMode.Opacity50:
-                        box.Opacity = 0.50F;
-                        break;
-                    case LiveBoxMode.Opacity75:
-                        box.Opacity = 0.75F;
-                        break;
-                    case LiveBoxMode.Opacity85:
-                        box.Opacity = 0.85F;
-                        break;
-                    case LiveBoxMode.Opacity95:
-                        box.Opacity = 0.95F;
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                }
-            }
+            SetLiveBoxElementOpacity(box);
+        }
+    }
+
+    private void SetLiveBoxElementOpacity(SvgElement element)
+    {
+        switch (Options.LiveBoxMode)
+        {
+            case LiveBoxMode.Visible:
+                // do nothing
+                break;
+            case LiveBoxMode.Opacity5:
+                element.Opacity = 0.05F;
+                break;
+            case LiveBoxMode.Opacity10:
+                element.Opacity = 0.1F;
+                break;
+            case LiveBoxMode.Opacity25:
+                element.Opacity = 0.25F;
+                break;
+            case LiveBoxMode.Opacity50:
+                element.Opacity = 0.50F;
+                break;
+            case LiveBoxMode.Opacity75:
+                element.Opacity = 0.75F;
+                break;
+            case LiveBoxMode.Opacity85:
+                element.Opacity = 0.85F;
+                break;
+            case LiveBoxMode.Opacity95:
+                element.Opacity = 0.95F;
+                break;
+            default:
+                throw new NotSupportedException();
         }
     }
 
@@ -125,7 +148,7 @@ public class Maker : IMaker
     {
         foreach (var box in boxGroup.Children.OfType<SvgRectangle>())
         {
-            if (!TryGetBoxDayNumber(box, out _)) // a dead box
+            if (!IsLiveBox(box))
             {
                 switch (Options.DeadBoxMode)
                 {
@@ -133,7 +156,7 @@ public class Maker : IMaker
                         // do nothing
                         break;
                     case DeadBoxMode.Invisible:
-                        box.Visibility = "hidden";
+                        box.Display = "none";
                         break;
                     case DeadBoxMode.Opacity25:
                         box.Opacity = 0.25F;
@@ -145,7 +168,7 @@ public class Maker : IMaker
                         box.Opacity = 0.75F;
                         break;
                     default:
-                        throw new NotImplementedException();
+                        throw new NotSupportedException();
                 }
             }
         }
@@ -202,7 +225,7 @@ public class Maker : IMaker
             case RowMode.SixRows:
                 return 6;
             default:
-                throw new NotImplementedException();
+                throw new NotSupportedException();
         }
     }
 
@@ -253,14 +276,36 @@ public class Maker : IMaker
 
             while (dayNumber <= lastDate.Day)
             {
-                var numberText = CreateDayNumberText(dayNumber, lastRow[index++], boxMarginMillimeters, true);
+                var box = lastRow[index];
+
+                var numberText = CreateDayNumberText(dayNumber, box, boxMarginMillimeters, true);
                 group.Children.Add(numberText);
 
+                DrawCentreLineInOverflowBox(box, doc);
+
+                ++index;
                 ++dayNumber;
             }
         }
 
         doc.Children.Add(group);
+    }
+
+    private void DrawCentreLineInOverflowBox(SvgRectangle box, SvgDocument doc)
+    {
+        var line = new SvgLine
+        {
+            StartX = box.X,
+            EndX = box.X + box.Width,
+            StartY = box.Y + box.Height / 2,
+            EndY = box.Y + box.Height / 2,
+            Stroke = new SvgColourServer(Color.Black),
+            StrokeWidth = new SvgUnit(SvgUnitType.Millimeter, 0.2f),
+        };
+
+        SetLiveBoxElementOpacity(line);
+
+        doc.Children.Add(line);
     }
 
     private SvgText CreateDayNumberText(
@@ -272,15 +317,18 @@ public class Maker : IMaker
             FontSize = new SvgUnit(SvgUnitType.Point, Options.FontPointSizeNumbers)
         };
 
+        var extraMargin = Options.BoxCornerMode == BoxCornerMode.Rounded ? box.Width / 30 : 0;
+
         numberText.ID = $"DayNumber{dayNumber}";
         numberText.X = new SvgUnitCollection
         {
             box.X + box.Width -
             new SvgUnit(SvgUnitType.Millimeter, boxMarginMillimeters) -
-            new SvgUnit(SvgUnitType.Pixel, numberText.Bounds.Width)
+            new SvgUnit(SvgUnitType.Pixel, numberText.Bounds.Width) -
+            extraMargin
         };
 
-        numberText.Y = new SvgUnitCollection { box.Y + numberText.FontSize + (isOverflow ? box.Height / 2 : 0)};
+        numberText.Y = new SvgUnitCollection { box.Y + numberText.FontSize + extraMargin + (isOverflow ? box.Height / 2 : 0)};
 
         return numberText;
     }
@@ -288,7 +336,7 @@ public class Maker : IMaker
     private void AddDayNames(SvgDocument doc, SvgGroup boxGroup)
     {
         var group = new SvgGroup { ID = "DayNameGroup" };
-        
+
         foreach (var box in boxGroup.Children.Take(7).OfType<SvgRectangle>())
         {
             var col = GetBoxColumn(box);
@@ -297,13 +345,13 @@ public class Maker : IMaker
 
             var s = new SvgText(dayOfWeekString)
             {
-                ID = $"DayName{dayOfWeek}", // do not localise day name here
+                ID = $"DayName{dayOfWeek}", // do not localize day name here
                 Font = Options.FontNameDays,
-                FontSize = Options.FontPointSizeDays
+                FontSize = Options.FontPointSizeDays,
+                X = new SvgUnitCollection {box.X + box.Width / 2},
+                Y = new SvgUnitCollection {box.Y - new SvgUnit(SvgUnitType.Millimeter, 3)},
+                TextAnchor = SvgTextAnchor.Middle
             };
-
-            s.X = new SvgUnitCollection {box.X};
-            s.Y = new SvgUnitCollection {box.Y - s.FontSize};
 
             group.Children.Add(s);
         }
@@ -332,15 +380,15 @@ public class Maker : IMaker
         };
     }
 
-    private SvgRectangle CreateOutlineBox(float widthMillimeters, float heightMillimeters)
+    private SvgRectangle CreateOutlineBox(float widthMillimeters, float heightMillimeters, float dayNameHeightMillimeterAllowance)
     {
         return new SvgRectangle
         {
             ID = "OutlineBox",
             X = new SvgUnit(SvgUnitType.Millimeter, Options.XMarginMillimeters),
-            Y = new SvgUnit(SvgUnitType.Millimeter, Options.YMarginMillimeters + 10),
+            Y = new SvgUnit(SvgUnitType.Millimeter, Options.YMarginMillimeters + dayNameHeightMillimeterAllowance),
             Width = new SvgUnit(SvgUnitType.Millimeter, widthMillimeters),
-            Height = new SvgUnit(SvgUnitType.Millimeter, heightMillimeters - 10),
+            Height = new SvgUnit(SvgUnitType.Millimeter, heightMillimeters),
             Fill = new SvgColourServer(Color.Azure),
         };
     }
@@ -359,7 +407,7 @@ public class Maker : IMaker
                 return new A5LandscapeDocument(Options.DrawMargin, Options.XMarginMillimeters, Options.YMarginMillimeters);
 
             default:
-                throw new NotImplementedException();
+                throw new NotSupportedException();
         }
     }
 }

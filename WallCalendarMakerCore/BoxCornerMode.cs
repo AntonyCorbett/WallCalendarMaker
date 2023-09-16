@@ -3,8 +3,5 @@
 public enum BoxCornerMode
 {
     Normal,
-    RoundedAll,
-    AngledAll,
-    RoundedPeriphery,
-    AngledPeriphery
+    Rounded
 }
