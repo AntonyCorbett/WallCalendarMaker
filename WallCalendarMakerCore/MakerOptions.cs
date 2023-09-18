@@ -30,7 +30,9 @@ public class MakerOptions
 
     public bool DrawMargin { get; set; }
 
-    public BoxCornerMode BoxCornerMode { get; set; } = BoxCornerMode.Rounded;
+    public BoxCornerMode BoxCornerMode { get; set; } = BoxCornerMode.Rounded2;
+
+    public bool IsBoxRounded => BoxCornerMode != BoxCornerMode.Normal && BoxCornerMode != BoxCornerMode.Merge;
 
     public bool DrawMonth { get; set; } = true;
 

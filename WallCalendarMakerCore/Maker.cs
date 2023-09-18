@@ -87,13 +87,33 @@ public class Maker : IMaker
             switch (Options.BoxCornerMode)
             {
                 case BoxCornerMode.Normal:
+                case BoxCornerMode.Merge:
                     break;
 
-                case BoxCornerMode.Rounded:
-                    var radius = box.Width / 10;
-                    box.CornerRadiusX = radius;
-                    box.CornerRadiusY = radius;
+                case BoxCornerMode.Rounded1:
+                    var radius1 = box.Width / 20;
+                    box.CornerRadiusX = radius1;
+                    box.CornerRadiusY = radius1;
                     break;
+
+                case BoxCornerMode.Rounded2:
+                    var radius2 = box.Width / 16;
+                    box.CornerRadiusX = radius2;
+                    box.CornerRadiusY = radius2;
+                    break;
+
+                case BoxCornerMode.Rounded3:
+                    var radius3 = box.Width / 12;
+                    box.CornerRadiusX = radius3;
+                    box.CornerRadiusY = radius3;
+                    break;
+
+                case BoxCornerMode.Rounded4:
+                    var radius4 = box.Width / 8;
+                    box.CornerRadiusX = radius4;
+                    box.CornerRadiusY = radius4;
+                    break;
+
 
                 default:
                     throw new NotSupportedException();
@@ -346,7 +366,7 @@ public class Maker : IMaker
             TextAnchor = SvgTextAnchor.End
         };
 
-        var extraMargin = Options.BoxCornerMode == BoxCornerMode.Rounded ? box.Width.Value / 30 : 0;
+        var extraMargin = CalculateExtraMarginForRoundedCorners(box.Width.Value);
 
         numberText.ID = $"DayNumber{dayNumber}";
         numberText.X = new SvgUnitCollection
@@ -362,11 +382,32 @@ public class Maker : IMaker
             new SvgUnit(SvgUnitType.Millimeter, 
                 box.Y.Value + 
                 extraMargin +
-                PointSizeToMillimeters(Options.NumbersFont.PointSize) + 
+                (float)(0.9 * PointSizeToMillimeters(Options.NumbersFont.PointSize)) + 
                 (isOverflow ? box.Height.Value / 2 : 0))
         };
 
         return numberText;
+    }
+
+    private float CalculateExtraMarginForRoundedCorners(float boxWidthMillimeters)
+    {
+        switch (Options.BoxCornerMode)
+        {
+            case BoxCornerMode.Normal:
+            case BoxCornerMode.Merge:
+                return 0;
+            case BoxCornerMode.Rounded1:
+                return boxWidthMillimeters / 60;
+            case BoxCornerMode.Rounded2:
+                return boxWidthMillimeters / 50;
+            case BoxCornerMode.Rounded3:
+                return boxWidthMillimeters / 40;
+            case BoxCornerMode.Rounded4:
+                return boxWidthMillimeters / 30;
+
+            default:
+                throw new NotSupportedException();
+        }
     }
 
     private void DrawMonthAndYear(SvgDocument doc)
@@ -425,6 +466,8 @@ public class Maker : IMaker
     {
         var group = new SvgGroup { ID = "DayNameGroup" };
 
+        var ySpacer = (float)(PointSizeToMillimeters(Options.DayNamesFont.PointSize) / 1.25);
+
         foreach (var box in boxGroup.Children.Take(7).OfType<SvgRectangle>())
         {
             var col = GetBoxColumn(box);
@@ -440,7 +483,7 @@ public class Maker : IMaker
                 FontWeight = Options.DayNamesFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
 
                 X = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.X.Value+ box.Width.Value / 2)},
-                Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.Y.Value - 3)},
+                Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.Y.Value - ySpacer)},
 
                 TextAnchor = SvgTextAnchor.Middle
             };
@@ -456,9 +499,17 @@ public class Maker : IMaker
         return (DayOfWeek)(((int) Options.MonthDefinition.FirstDayOfWeek + col) % 7);
     }
 
-    private static SvgRectangle CreateSingleBox(
+    private SvgRectangle CreateSingleBox(
         float x, float y, float widthMillimeters, float heightMillimeters, float boxMargin, string id)
     {
+        if (Options.BoxCornerMode == BoxCornerMode.Merge)
+        {
+            x -= boxMargin/2;
+            y -= boxMargin/2;
+
+            boxMargin = 0;
+        }
+
         return new SvgRectangle
         {
             ID = id,

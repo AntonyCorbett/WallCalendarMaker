@@ -3,5 +3,9 @@
 public enum BoxCornerMode
 {
     Normal,
-    Rounded
+    Merge,
+    Rounded1,
+    Rounded2,
+    Rounded3,
+    Rounded4,
 }
