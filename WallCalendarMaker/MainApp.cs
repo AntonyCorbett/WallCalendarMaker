@@ -25,14 +25,45 @@ internal sealed class MainApp
         {
             var maker = new Maker(opts =>
             {
+                opts.XMarginMillimeters = 40;
                 opts.MonthDefinition.Year = 2023;
                 opts.MonthDefinition.Month = 10;
                 opts.MonthDefinition.FirstDayOfWeek = DayOfWeek.Monday;
-                opts.RowMode = RowMode.FiveRows;
+                opts.RowMode = RowMode.SixRows;
 
                 // fonts
-                opts.FontNameDays = "Calibri";
-                opts.FontNameNumbers = "Calibri";
+                //opts.DayNamesFont = new CalendarFont
+                //{
+                //    Name = "Bradley Hand ITC",
+                //    PointSize = 20,
+                //    Bold = true,
+                //};
+
+                //opts.NumbersFont = new CalendarFont
+                //{
+                //    Name = "Calibri",
+                //    PointSize = 16,
+                //};
+
+                //opts.MonthFont = new CalendarFont
+                //{
+                //    Name = "Calibri",
+                //    PointSize = 28,
+                //};
+
+                //opts.YearFont = new CalendarFont
+                //{
+                //    Name = "Bradley Hand ITC",
+                //    PointSize = 28,
+                //    Bold = true,
+                //    Italic = true
+                //};
+
+                //opts.DrawMargin = true;
+                //opts.DrawOutlineBox = true;
+
+                opts.DrawMonth = true;
+                opts.DrawYear = true;
             });
 
             maker.Generate("myfile.svg");

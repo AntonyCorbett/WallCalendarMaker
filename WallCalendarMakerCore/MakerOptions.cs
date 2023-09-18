@@ -10,13 +10,17 @@ public class MakerOptions
 
     public MonthDefinition MonthDefinition { get; set; } = new();
 
-    public string FontNameDays { get; set; } = "Arial";
+    public CalendarFont DayNamesFont { get; set; } = new()
+    {
+        Name = "Arial",
+        PointSize = 14.0F,
+    };
 
-    public float FontPointSizeDays { get; set; } = 18.0F;
-
-    public string FontNameNumbers { get; set; } = "Arial";
-
-    public float FontPointSizeNumbers { get; set; } = 14.0F;
+    public CalendarFont NumbersFont { get; set; } = new()
+    {
+        Name = "Arial",
+        PointSize = 14.0F,
+    };
 
     public RowMode RowMode { get; set; } = RowMode.SixRows;
 
@@ -27,6 +31,24 @@ public class MakerOptions
     public bool DrawMargin { get; set; }
 
     public BoxCornerMode BoxCornerMode { get; set; } = BoxCornerMode.Rounded;
+
+    public bool DrawMonth { get; set; } = true;
+
+    public bool DrawYear { get; set; } = true;
+
+    public bool DrawOutlineBox { get; set; } = false;
+
+    public CalendarFont MonthFont { get; set; } = new()
+    {
+        Name = "Arial",
+        PointSize = 14.0F,
+    };
+    
+    public CalendarFont YearFont { get; set; } = new()
+    {
+        Name = "Arial",
+        PointSize = 14.0F,
+    };
 
     public void Validate()
     {

@@ -28,12 +28,18 @@ public class Maker : IMaker
 
         var numRows = GetRowCount();
 
-        var dayNameHeightMillimeter = GetDayNameHeightAllowanceMillimeters();
+        var dayNameHeightMillimeters = GetDayNameHeightAllowanceMillimeters();
+        var monthNameHeightMillimeters = GetMonthNameHeightAllowanceMillimeters();
 
         var outlineBoxGroupWidth = doc.Width.Value - (2 * Options.XMarginMillimeters);
-        var outlineBoxGroupHeight = doc.Height.Value - (2 * Options.YMarginMillimeters) - dayNameHeightMillimeter;
 
-        var outlineBox = CreateOutlineBox(outlineBoxGroupWidth, outlineBoxGroupHeight, dayNameHeightMillimeter);
+        var outlineBoxGroupHeight =
+            doc.Height.Value -
+            (2 * Options.YMarginMillimeters) -
+            dayNameHeightMillimeters -
+            monthNameHeightMillimeters;
+
+        var outlineBox = CreateOutlineBox(outlineBoxGroupWidth, outlineBoxGroupHeight, dayNameHeightMillimeters + monthNameHeightMillimeters);
 
         doc.Children.Add(outlineBox);
 
@@ -64,8 +70,9 @@ public class Maker : IMaker
 
         doc.Children.Add(boxGroup);
 
-        AddDayNames(doc, boxGroup);
-        AddDayNumbers(doc, boxGroup, individualBoxMargin);
+        DrawMonthAndYear(doc);
+        DrawDayNames(doc, boxGroup);
+        DrawDayNumbers(doc, boxGroup, individualBoxMargin);
         SpecifyLiveBoxOpacity(boxGroup);
         SpecifyDeadBoxOpacity(boxGroup);
         SpecifyBoxCorners(boxGroup);
@@ -100,7 +107,26 @@ public class Maker : IMaker
 
     private float GetDayNameHeightAllowanceMillimeters()
     {
-        return (float)((Options.FontPointSizeDays * 25.4) / 72.0);
+        return PointSizeToMillimeters(Options.DayNamesFont.PointSize);
+    }
+
+    private float PointSizeToMillimeters(float pointSize)
+    {
+        return (float)((pointSize * 25.4) / 72.0);
+    }
+
+    private float GetMonthNameHeightAllowanceMillimeters()
+    {
+        if (Options is {DrawMonth: false, DrawYear: false})
+        {
+            return 0;
+        }
+
+        var largestPointSize = Math.Max(
+            Options.DrawMonth ? Options.MonthFont.PointSize : 0,
+            Options.DrawYear ? Options.YearFont.PointSize : 0);
+
+        return 2 * PointSizeToMillimeters(largestPointSize);
     }
 
     private void SpecifyLiveBoxOpacity(SvgGroup boxGroup)
@@ -229,7 +255,7 @@ public class Maker : IMaker
         }
     }
 
-    private void AddDayNumbers(SvgDocument doc, SvgGroup boxGroup, float boxMarginMillimeters)
+    private void DrawDayNumbers(SvgDocument doc, SvgGroup boxGroup, float boxMarginMillimeters)
     {
         var group = new SvgGroup { ID = "DayNumberGroup" };
 
@@ -313,27 +339,89 @@ public class Maker : IMaker
     {
         var numberText = new SvgText(dayNumber.ToString())
         {
-            Font = Options.FontNameNumbers,
-            FontSize = new SvgUnit(SvgUnitType.Point, Options.FontPointSizeNumbers)
+            Font = Options.NumbersFont.Name,
+            FontSize = new SvgUnit(SvgUnitType.Point, Options.NumbersFont.PointSize),
+            FontStyle = Options.NumbersFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
+            FontWeight = Options.NumbersFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
+            TextAnchor = SvgTextAnchor.End
         };
 
-        var extraMargin = Options.BoxCornerMode == BoxCornerMode.Rounded ? box.Width / 30 : 0;
+        var extraMargin = Options.BoxCornerMode == BoxCornerMode.Rounded ? box.Width.Value / 30 : 0;
 
         numberText.ID = $"DayNumber{dayNumber}";
         numberText.X = new SvgUnitCollection
         {
-            box.X + box.Width -
-            new SvgUnit(SvgUnitType.Millimeter, boxMarginMillimeters) -
-            new SvgUnit(SvgUnitType.Pixel, numberText.Bounds.Width) -
-            extraMargin
+            new SvgUnit(SvgUnitType.Millimeter,
+                box.X.Value + box.Width.Value -
+                boxMarginMillimeters -
+                extraMargin)
         };
 
-        numberText.Y = new SvgUnitCollection { box.Y + numberText.FontSize + extraMargin + (isOverflow ? box.Height / 2 : 0)};
+        numberText.Y = new SvgUnitCollection
+        {
+            new SvgUnit(SvgUnitType.Millimeter, 
+                box.Y.Value + 
+                extraMargin +
+                PointSizeToMillimeters(Options.NumbersFont.PointSize) + 
+                (isOverflow ? box.Height.Value / 2 : 0))
+        };
 
         return numberText;
     }
 
-    private void AddDayNames(SvgDocument doc, SvgGroup boxGroup)
+    private void DrawMonthAndYear(SvgDocument doc)
+    {
+        if (Options is {DrawMonth: false, DrawYear: false})
+        {
+            return;
+        }
+
+        var monthString = CultureInfo.CurrentCulture.DateTimeFormat.MonthNames[Options.MonthDefinition.Month - 1];
+
+        var dt = new DateTime(Options.MonthDefinition.Year, Options.MonthDefinition.Month, 1, 0, 0, 0, DateTimeKind.Local);
+        var yearString = dt.ToString("yyyy", CultureInfo.CurrentCulture);
+
+        var sMonth = new SvgTextSpan
+        {
+            Text = monthString + (Options.DrawYear ? " " : ""),
+            ID = "MonthName",
+            Font = Options.MonthFont.Name,
+            FontSize = new SvgUnit(SvgUnitType.Point, Options.MonthFont.PointSize),
+            FontStyle = Options.MonthFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
+            FontWeight = Options.MonthFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
+        };
+
+        var sYear = new SvgTextSpan
+        {
+            Text = yearString,
+            ID = "Year",
+            Font = Options.YearFont.Name,
+            FontSize = new SvgUnit(SvgUnitType.Point, Options.YearFont.PointSize),
+            FontStyle = Options.YearFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
+            FontWeight = Options.YearFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
+        };
+
+        var s = new SvgText
+        {
+            X = new SvgUnitCollection { new(SvgUnitType.Millimeter, doc.Width.Value / 2)},
+            Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, PointSizeToMillimeters(Options.MonthFont.PointSize) + Options.YMarginMillimeters) },
+            TextAnchor = SvgTextAnchor.Middle
+        };
+
+        if (Options.DrawMonth)
+        {
+            s.Children.Add(sMonth);
+        }
+
+        if (Options.DrawYear)
+        {
+            s.Children.Add(sYear);
+        }
+
+        doc.Children.Add(s);
+    }
+
+    private void DrawDayNames(SvgDocument doc, SvgGroup boxGroup)
     {
         var group = new SvgGroup { ID = "DayNameGroup" };
 
@@ -346,10 +434,14 @@ public class Maker : IMaker
             var s = new SvgText(dayOfWeekString)
             {
                 ID = $"DayName{dayOfWeek}", // do not localize day name here
-                Font = Options.FontNameDays,
-                FontSize = Options.FontPointSizeDays,
-                X = new SvgUnitCollection {box.X + box.Width / 2},
-                Y = new SvgUnitCollection {box.Y - new SvgUnit(SvgUnitType.Millimeter, 3)},
+                Font = Options.DayNamesFont.Name,
+                FontSize = new SvgUnit(SvgUnitType.Point, Options.DayNamesFont.PointSize),
+                FontStyle = Options.DayNamesFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
+                FontWeight = Options.DayNamesFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
+
+                X = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.X.Value+ box.Width.Value / 2)},
+                Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.Y.Value - 3)},
+
                 TextAnchor = SvgTextAnchor.Middle
             };
 
@@ -380,17 +472,24 @@ public class Maker : IMaker
         };
     }
 
-    private SvgRectangle CreateOutlineBox(float widthMillimeters, float heightMillimeters, float dayNameHeightMillimeterAllowance)
+    private SvgRectangle CreateOutlineBox(float widthMillimeters, float heightMillimeters, float headerHeightMillimeterAllowance)
     {
-        return new SvgRectangle
+        var result = new SvgRectangle
         {
             ID = "OutlineBox",
             X = new SvgUnit(SvgUnitType.Millimeter, Options.XMarginMillimeters),
-            Y = new SvgUnit(SvgUnitType.Millimeter, Options.YMarginMillimeters + dayNameHeightMillimeterAllowance),
+            Y = new SvgUnit(SvgUnitType.Millimeter, Options.YMarginMillimeters + headerHeightMillimeterAllowance),
             Width = new SvgUnit(SvgUnitType.Millimeter, widthMillimeters),
             Height = new SvgUnit(SvgUnitType.Millimeter, heightMillimeters),
-            Fill = new SvgColourServer(Color.Azure),
+            Fill = new SvgColourServer(System.Drawing.Color.DeepSkyBlue),
         };
+
+        if (!Options.DrawOutlineBox)
+        {
+            result.Display = "none";
+        }
+
+        return result;
     }
 
     private SvgDocument CreateBlankDocument()
