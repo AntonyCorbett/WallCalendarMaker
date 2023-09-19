@@ -1,4 +1,6 @@
-﻿namespace WallCalendarMakerCore;
+﻿using System.Drawing;
+
+namespace WallCalendarMakerCore;
 
 public class CalendarFont
 {
@@ -9,4 +11,6 @@ public class CalendarFont
     public bool Bold { get; set; }
 
     public bool Italic { get; set; }
+
+    public Color Color { get; set; } = Color.Black;
 }

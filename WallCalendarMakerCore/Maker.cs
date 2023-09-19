@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Globalization;
 using Svg;
 using WallCalendarMakerCore.CommonDocuments;
+using WallCalendarMakerCore.Holidays;
 
 namespace WallCalendarMakerCore;
 
@@ -15,12 +16,12 @@ public class Maker : IMaker
         action?.Invoke(Options);
     }
 
-    public void Generate(string path, bool useBom = true)
+    public async Task GenerateAsync(string path, bool useBom = true)
     {
-        Generate().Write(path, useBom);
+        (await GenerateAsync()).Write(path, useBom);
     }
 
-    public SvgDocument Generate()
+    public async Task<SvgDocument> GenerateAsync()
     {
         var doc = CreateBlankDocument();
 
@@ -76,8 +77,58 @@ public class Maker : IMaker
         SpecifyLiveBoxOpacity(boxGroup);
         SpecifyDeadBoxOpacity(boxGroup);
         SpecifyBoxCorners(boxGroup);
+        await DrawHolidaysAsync(doc, boxGroup);
 
         return doc;
+    }
+
+    private async Task DrawHolidaysAsync(SvgDocument doc, SvgGroup boxGroup)
+    {
+        if (!Options.DrawHolidays)
+        {
+            return;
+        }
+
+        var holidays = await GetHolidaysInMonthAsync();
+        var holidayNum = 1;
+        foreach (var holiday in holidays)
+        {
+            var box = (SvgRectangle?)boxGroup.Children.SingleOrDefault(x =>
+                TryGetBoxDayNumber((SvgRectangle)x, out var dayNum) && dayNum == holiday.Date.Day);
+
+            if (box != null)
+            {
+                var s = (holiday.Title + (string.IsNullOrWhiteSpace(holiday.Notes) ? "" : $" ({holiday.Notes})"))
+                    .Trim();
+
+                var text = new SvgText(s)
+                {
+                    ID = $"Holiday{holidayNum++}",
+                    Font = Options.HolidaysFont.Name,
+                    FontSize = new SvgUnit(SvgUnitType.Point, Options.HolidaysFont.PointSize),
+                    FontStyle = Options.HolidaysFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
+                    FontWeight = Options.HolidaysFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
+                    Fill = new SvgColourServer(Options.HolidaysFont.Color),
+                    X = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.X.Value + PointSizeToMillimeters(Options.HolidaysFont.PointSize)/2)},
+                    Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.Y.Value + box.Height.Value - 1) }
+                };
+
+                doc.Children.Add(text);
+            }
+        }
+    }
+
+    private async Task<IEnumerable<HolidaysService.AnEvent>> GetHolidaysInMonthAsync()
+    {
+        var holidaysService = new HolidaysService();
+        var holidays = await holidaysService.ExecuteAsync();
+        if (holidays == null)
+        {
+            return Enumerable.Empty<HolidaysService.AnEvent>();
+        }
+
+        return holidays.EnglandAndWales.Events.Where(x =>
+            x.Date.Year == Options.MonthDefinition.Year && x.Date.Month == Options.MonthDefinition.Month);
     }
 
     private void SpecifyBoxCorners(SvgGroup boxGroup)
@@ -130,9 +181,14 @@ public class Maker : IMaker
         return PointSizeToMillimeters(Options.DayNamesFont.PointSize);
     }
 
-    private float PointSizeToMillimeters(float pointSize)
+    private static float PointSizeToMillimeters(float pointSize)
     {
         return (float)((pointSize * 25.4) / 72.0);
+    }
+
+    private static float UnitSizeToMillimeters(float unitSize)
+    {
+        return (float) (unitSize * 25.4) / 96.0F;
     }
 
     private float GetMonthNameHeightAllowanceMillimeters()
@@ -482,13 +538,27 @@ public class Maker : IMaker
                 FontStyle = Options.DayNamesFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
                 FontWeight = Options.DayNamesFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
 
-                X = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.X.Value+ box.Width.Value / 2)},
-                Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.Y.Value - ySpacer)},
+                X = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.X.Value + box.Width.Value / 2) },
+                Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.Y.Value - ySpacer) },
 
                 TextAnchor = SvgTextAnchor.Middle
             };
 
-            group.Children.Add(s);
+            //var w1 = UnitSizeToMillimeters(s.Bounds.Width);
+            //var y = new SvgUnit(SvgUnitType.Millimeter, s.Y[0].Value + 3);
+            //var line = new SvgLine
+            //{
+            //    StartX = new SvgUnit(SvgUnitType.Millimeter, s.X[0].Value - w1/2),
+            //    EndX = new SvgUnit(SvgUnitType.Millimeter, s.X[0].Value + w1/2),
+            //    StartY = y,
+            //    EndY = y,
+            //    StrokeWidth = new SvgUnit(SvgUnitType.Millimeter, 1),
+            //    Stroke = new SvgColourServer(Color.Black)
+            //};
+
+            //doc.Children.Add(line);
+            
+        group.Children.Add(s);
         }
 
         doc.Children.Add(group);

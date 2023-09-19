@@ -1,4 +1,6 @@
-﻿namespace WallCalendarMakerCore;
+﻿using System.Drawing;
+
+namespace WallCalendarMakerCore;
 
 public class MakerOptions
 {
@@ -10,6 +12,18 @@ public class MakerOptions
 
     public MonthDefinition MonthDefinition { get; set; } = new();
 
+    public CalendarFont MonthFont { get; set; } = new()
+    {
+        Name = "Arial",
+        PointSize = 14.0F,
+    };
+
+    public CalendarFont YearFont { get; set; } = new()
+    {
+        Name = "Arial",
+        PointSize = 14.0F,
+    };
+
     public CalendarFont DayNamesFont { get; set; } = new()
     {
         Name = "Arial",
@@ -20,6 +34,13 @@ public class MakerOptions
     {
         Name = "Arial",
         PointSize = 14.0F,
+    };
+
+    public CalendarFont HolidaysFont { get; set; } = new()
+    {
+        Name = "Arial",
+        PointSize = 7.0F,
+        Color = Color.DarkGray
     };
 
     public RowMode RowMode { get; set; } = RowMode.SixRows;
@@ -40,17 +61,7 @@ public class MakerOptions
 
     public bool DrawOutlineBox { get; set; } = false;
 
-    public CalendarFont MonthFont { get; set; } = new()
-    {
-        Name = "Arial",
-        PointSize = 14.0F,
-    };
-    
-    public CalendarFont YearFont { get; set; } = new()
-    {
-        Name = "Arial",
-        PointSize = 14.0F,
-    };
+    public bool DrawHolidays { get; set; } = true;
 
     public void Validate()
     {
