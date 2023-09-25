@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using RestSharp;
 
-namespace WallCalendarMakerCore.Holidays;
+namespace WallCalendarMaker.Holidays;
 
 internal class HolidaysService
 {

@@ -36,13 +36,6 @@ public class MakerOptions
         PointSize = 14.0F,
     };
 
-    public CalendarFont HolidaysFont { get; set; } = new()
-    {
-        Name = "Arial",
-        PointSize = 7.0F,
-        Color = Color.DarkGray
-    };
-
     public RowMode RowMode { get; set; } = RowMode.SixRows;
 
     public DeadBoxMode DeadBoxMode { get; set; } = DeadBoxMode.Invisible;
@@ -60,9 +53,9 @@ public class MakerOptions
     public bool DrawYear { get; set; } = true;
 
     public bool DrawOutlineBox { get; set; } = false;
-
-    public bool DrawHolidays { get; set; } = true;
-
+    
+    public List<Occasion> Occasions { get; set; } = new();
+    
     public void Validate()
     {
 #pragma warning disable S3928 // Parameter names used into ArgumentException constructors should match an existing one 

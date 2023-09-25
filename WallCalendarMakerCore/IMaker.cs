@@ -6,7 +6,7 @@ internal interface IMaker
 {
     MakerOptions Options { get; }
 
-    Task<SvgDocument> GenerateAsync();
+    SvgDocument Generate();
 
-    Task GenerateAsync(string path, bool useBom = true);
+    void Generate(string path, bool useBom = true);
 }

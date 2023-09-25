@@ -1,5 +1,7 @@
-﻿using Serilog;
+﻿using System.Drawing;
+using Serilog;
 using WallCalendarMaker.EventArguments;
+using WallCalendarMaker.Holidays;
 using WallCalendarMakerCore;
 
 namespace WallCalendarMaker;
@@ -65,11 +67,13 @@ internal sealed class MainApp
                 opts.DrawMargin = false;
                 opts.DrawOutlineBox = false;
 
-                opts.DrawMonth = false;
-                opts.DrawYear = false;
+                opts.DrawMonth = true;
+                opts.DrawYear = true;
             });
 
-            await maker.GenerateAsync("myfile.svg");
+            await AddHolidaysAsync(maker.Options);
+
+            maker.Generate("myfile.svg");
 
             OnProgress("Completed", false);
         }
@@ -91,5 +95,36 @@ internal sealed class MainApp
     private void OnProgress(string message, bool verbose)
     {
         OnProgress(new ProgressEventArgs(message, verbose));
+    }
+
+    private async Task AddHolidaysAsync(MakerOptions makerOptions)
+    {
+        foreach (var @event in await GetHolidaysInMonthAsync(makerOptions))
+        {
+            makerOptions.Occasions.Add(new Occasion
+            {
+                Date = @event.Date,
+                Title = @event.Title,
+                Font = new CalendarFont
+                {
+                    Name = "Arial",
+                    PointSize = 7.0F,
+                    Color = Color.DarkGray
+                }
+            });
+        }
+    }
+
+    private static async Task<IEnumerable<HolidaysService.AnEvent>> GetHolidaysInMonthAsync(MakerOptions options)
+    {
+        var holidaysService = new HolidaysService();
+        var holidays = await holidaysService.ExecuteAsync();
+        if (holidays == null)
+        {
+            return Enumerable.Empty<HolidaysService.AnEvent>();
+        }
+
+        return holidays.EnglandAndWales.Events.Where(x =>
+            x.Date.Year == options.MonthDefinition.Year && x.Date.Month == options.MonthDefinition.Month);
     }
 }

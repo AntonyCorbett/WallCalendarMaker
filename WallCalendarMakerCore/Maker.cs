@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Globalization;
 using Svg;
 using WallCalendarMakerCore.CommonDocuments;
-using WallCalendarMakerCore.Holidays;
 
 namespace WallCalendarMakerCore;
 
@@ -16,12 +15,12 @@ public class Maker : IMaker
         action?.Invoke(Options);
     }
 
-    public async Task GenerateAsync(string path, bool useBom = true)
+    public void Generate(string path, bool useBom = true)
     {
-        (await GenerateAsync()).Write(path, useBom);
+        Generate().Write(path, useBom);
     }
 
-    public async Task<SvgDocument> GenerateAsync()
+    public SvgDocument Generate()
     {
         var doc = CreateBlankDocument();
 
@@ -77,58 +76,39 @@ public class Maker : IMaker
         SpecifyLiveBoxOpacity(boxGroup);
         SpecifyDeadBoxOpacity(boxGroup);
         SpecifyBoxCorners(boxGroup);
-        await DrawHolidaysAsync(doc, boxGroup);
+        DrawOccasions(doc, boxGroup);
 
         return doc;
     }
 
-    private async Task DrawHolidaysAsync(SvgDocument doc, SvgGroup boxGroup)
+    private void DrawOccasions(SvgDocument doc, SvgGroup boxGroup)
     {
-        if (!Options.DrawHolidays)
-        {
-            return;
-        }
-
-        var holidays = await GetHolidaysInMonthAsync();
-        var holidayNum = 1;
-        foreach (var holiday in holidays)
+        var occasions = Options.Occasions;
+        var occasionNum = 1;
+        foreach (var occasion in occasions)
         {
             var box = (SvgRectangle?)boxGroup.Children.SingleOrDefault(x =>
-                TryGetBoxDayNumber((SvgRectangle)x, out var dayNum) && dayNum == holiday.Date.Day);
+                TryGetBoxDayNumber((SvgRectangle)x, out var dayNum) && dayNum == occasion.Date.Day);
 
             if (box != null)
             {
-                var s = (holiday.Title + (string.IsNullOrWhiteSpace(holiday.Notes) ? "" : $" ({holiday.Notes})"))
-                    .Trim();
+                var s = occasion.Title.Trim();
 
                 var text = new SvgText(s)
                 {
-                    ID = $"Holiday{holidayNum++}",
-                    Font = Options.HolidaysFont.Name,
-                    FontSize = new SvgUnit(SvgUnitType.Point, Options.HolidaysFont.PointSize),
-                    FontStyle = Options.HolidaysFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
-                    FontWeight = Options.HolidaysFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
-                    Fill = new SvgColourServer(Options.HolidaysFont.Color),
-                    X = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.X.Value + PointSizeToMillimeters(Options.HolidaysFont.PointSize)/2)},
+                    ID = $"Occasion{occasionNum++}",
+                    Font = occasion.Font.Name,
+                    FontSize = new SvgUnit(SvgUnitType.Point, occasion.Font.PointSize),
+                    FontStyle = occasion.Font.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
+                    FontWeight = occasion.Font.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
+                    Fill = new SvgColourServer(occasion.Font.Color),
+                    X = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.X.Value + PointSizeToMillimeters(occasion.Font.PointSize)/2)},
                     Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.Y.Value + box.Height.Value - 1) }
                 };
 
                 doc.Children.Add(text);
             }
         }
-    }
-
-    private async Task<IEnumerable<HolidaysService.AnEvent>> GetHolidaysInMonthAsync()
-    {
-        var holidaysService = new HolidaysService();
-        var holidays = await holidaysService.ExecuteAsync();
-        if (holidays == null)
-        {
-            return Enumerable.Empty<HolidaysService.AnEvent>();
-        }
-
-        return holidays.EnglandAndWales.Events.Where(x =>
-            x.Date.Year == Options.MonthDefinition.Year && x.Date.Month == Options.MonthDefinition.Month);
     }
 
     private void SpecifyBoxCorners(SvgGroup boxGroup)
@@ -427,7 +407,7 @@ public class Maker : IMaker
         numberText.ID = $"DayNumber{dayNumber}";
         numberText.X = new SvgUnitCollection
         {
-            new SvgUnit(SvgUnitType.Millimeter,
+            new (SvgUnitType.Millimeter,
                 box.X.Value + box.Width.Value -
                 boxMarginMillimeters -
                 extraMargin)
@@ -435,7 +415,7 @@ public class Maker : IMaker
 
         numberText.Y = new SvgUnitCollection
         {
-            new SvgUnit(SvgUnitType.Millimeter, 
+            new (SvgUnitType.Millimeter, 
                 box.Y.Value + 
                 extraMargin +
                 (float)(0.9 * PointSizeToMillimeters(Options.NumbersFont.PointSize)) + 
@@ -544,20 +524,6 @@ public class Maker : IMaker
                 TextAnchor = SvgTextAnchor.Middle
             };
 
-            //var w1 = UnitSizeToMillimeters(s.Bounds.Width);
-            //var y = new SvgUnit(SvgUnitType.Millimeter, s.Y[0].Value + 3);
-            //var line = new SvgLine
-            //{
-            //    StartX = new SvgUnit(SvgUnitType.Millimeter, s.X[0].Value - w1/2),
-            //    EndX = new SvgUnit(SvgUnitType.Millimeter, s.X[0].Value + w1/2),
-            //    StartY = y,
-            //    EndY = y,
-            //    StrokeWidth = new SvgUnit(SvgUnitType.Millimeter, 1),
-            //    Stroke = new SvgColourServer(Color.Black)
-            //};
-
-            //doc.Children.Add(line);
-            
         group.Children.Add(s);
         }
 
@@ -602,7 +568,7 @@ public class Maker : IMaker
             Y = new SvgUnit(SvgUnitType.Millimeter, Options.YMarginMillimeters + headerHeightMillimeterAllowance),
             Width = new SvgUnit(SvgUnitType.Millimeter, widthMillimeters),
             Height = new SvgUnit(SvgUnitType.Millimeter, heightMillimeters),
-            Fill = new SvgColourServer(System.Drawing.Color.DeepSkyBlue),
+            Fill = new SvgColourServer(Color.DeepSkyBlue),
         };
 
         if (!Options.DrawOutlineBox)
