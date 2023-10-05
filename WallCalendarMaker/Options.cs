@@ -1,14 +1,13 @@
-﻿namespace WallCalendarMaker
+﻿namespace WallCalendarMaker;
+
+internal sealed class Options
 {
-    internal class Options
+    public bool Verbose { get; set; }
+
+    public bool IsValid()
     {
-        public bool Verbose { get; set; }
+        // place validation code here.
 
-        public bool IsValid()
-        {
-            // place validation code here.
-
-            return true;
-        }
+        return true;
     }
 }

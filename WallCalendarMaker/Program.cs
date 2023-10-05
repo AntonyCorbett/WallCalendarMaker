@@ -80,9 +80,6 @@ namespace WallCalendarMaker
 
         private static Options GetOptions(IConfigurationRoot config)
         {
-            // var durationStr = config["maxDuration"];
-            // int.TryParse(durationStr, out var duration);
-
             // build options here
 
             var verboseStr = config["verbose"];

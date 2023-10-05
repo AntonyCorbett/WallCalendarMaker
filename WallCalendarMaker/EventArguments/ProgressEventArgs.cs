@@ -1,15 +1,14 @@
-﻿namespace WallCalendarMaker.EventArguments
+﻿namespace WallCalendarMaker.EventArguments;
+
+internal sealed class ProgressEventArgs : EventArgs
 {
-    internal class ProgressEventArgs : EventArgs
+    public ProgressEventArgs(string message, bool isVerbose)
     {
-        public ProgressEventArgs(string message, bool isVerbose)
-        {
-            Message = message;
-            IsVerbose = isVerbose;
-        }
-
-        public string Message { get; }
-
-        public bool IsVerbose { get; }
+        Message = message;
+        IsVerbose = isVerbose;
     }
+
+    public string Message { get; }
+
+    public bool IsVerbose { get; }
 }

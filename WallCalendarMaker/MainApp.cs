@@ -27,53 +27,12 @@ internal sealed class MainApp
         {
             var maker = new Maker(opts =>
             {
-                opts.XMarginMillimeters = 20;
-                opts.YMarginMillimeters = 10;
-                opts.MonthDefinition.Year = 2023;
-                opts.MonthDefinition.Month = 4;
-                opts.MonthDefinition.FirstDayOfWeek = DayOfWeek.Monday;
-                opts.RowMode = RowMode.SixRows;
-                opts.BoxCornerMode = BoxCornerMode.Rounded2;
-                //opts.LiveBoxMode = LiveBoxMode.Opacity25;
-
-                // fonts
-                opts.DayNamesFont = new CalendarFont
-                {
-                    Name = "Constantia",
-                    PointSize = 14,
-                    Bold = true,
-                };
-
-                opts.NumbersFont = new CalendarFont
-                {
-                    Name = "Constantia",
-                    PointSize = 16,
-                };
-
-                opts.MonthFont = new CalendarFont
-                {
-                    Name = "Constantia",
-                    PointSize = 36,
-                    Bold = true,
-                };
-
-                opts.YearFont = new CalendarFont
-                {
-                    Name = "Constantia",
-                    PointSize = 36,
-                    Bold = true,
-                };
-
-                opts.DrawMargin = false;
-                opts.DrawOutlineBox = false;
-
-                opts.DrawMonth = true;
-                opts.DrawYear = true;
+                // modify options here...
             });
 
-            await AddHolidaysAsync(maker.Options);
+            await AddHolidaysAsync(maker.Options, cancellationToken);
 
-            maker.Generate("myfile.svg");
+            maker.Generate("calendar.svg");
 
             OnProgress("Completed", false);
         }
@@ -97,14 +56,16 @@ internal sealed class MainApp
         OnProgress(new ProgressEventArgs(message, verbose));
     }
 
-    private async Task AddHolidaysAsync(MakerOptions makerOptions)
+    private static async Task AddHolidaysAsync(MakerOptions makerOptions, CancellationToken cancellationToken)
     {
-        foreach (var @event in await GetHolidaysInMonthAsync(makerOptions))
+        foreach (var @event in
+                 (await GetHolidaysInMonthAsync(makerOptions, cancellationToken))
+                 .Where(ev => !string.IsNullOrWhiteSpace(ev.Title)))
         {
             makerOptions.Occasions.Add(new Occasion
             {
                 Date = @event.Date,
-                Title = @event.Title,
+                Title = @event.Title!,
                 Font = new CalendarFont
                 {
                     Name = "Arial",
@@ -115,11 +76,11 @@ internal sealed class MainApp
         }
     }
 
-    private static async Task<IEnumerable<HolidaysService.AnEvent>> GetHolidaysInMonthAsync(MakerOptions options)
+    private static async Task<IEnumerable<HolidaysService.AnEvent>> GetHolidaysInMonthAsync(
+        MakerOptions options, CancellationToken cancellationToken)
     {
-        var holidaysService = new HolidaysService();
-        var holidays = await holidaysService.ExecuteAsync();
-        if (holidays == null)
+        var holidays = await HolidaysService.ExecuteAsync(cancellationToken);
+        if (holidays?.EnglandAndWales?.Events == null)
         {
             return Enumerable.Empty<HolidaysService.AnEvent>();
         }

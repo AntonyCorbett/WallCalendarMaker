@@ -22,6 +22,8 @@ public class Maker : IMaker
 
     public SvgDocument Generate()
     {
+        Options.Validate();
+
         var doc = CreateBlankDocument();
 
         var boxGroup = new SvgGroup { ID = "BoxGroup" };
@@ -102,7 +104,7 @@ public class Maker : IMaker
                     FontStyle = occasion.Font.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
                     FontWeight = occasion.Font.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
                     Fill = new SvgColourServer(occasion.Font.Color),
-                    X = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.X.Value + PointSizeToMillimeters(occasion.Font.PointSize)/2)},
+                    X = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.X.Value + (PointSizeToMillimeters(occasion.Font.PointSize)/2))},
                     Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.Y.Value + box.Height.Value - 1) }
                 };
 
@@ -144,7 +146,6 @@ public class Maker : IMaker
                     box.CornerRadiusX = radius4;
                     box.CornerRadiusY = radius4;
                     break;
-
 
                 default:
                     throw new NotSupportedException();
@@ -300,15 +301,12 @@ public class Maker : IMaker
 
     private int GetRowCount()
     {
-        switch (Options.RowMode)
+        return Options.RowMode switch
         {
-            case RowMode.FiveRows:
-                return 5;
-            case RowMode.SixRows:
-                return 6;
-            default:
-                throw new NotSupportedException();
-        }
+            RowMode.FiveRows => 5,
+            RowMode.SixRows => 6,
+            _ => throw new NotSupportedException()
+        };
     }
 
     private void DrawDayNumbers(SvgDocument doc, SvgGroup boxGroup, float boxMarginMillimeters)
@@ -379,8 +377,8 @@ public class Maker : IMaker
         {
             StartX = box.X,
             EndX = box.X + box.Width,
-            StartY = box.Y + box.Height / 2,
-            EndY = box.Y + box.Height / 2,
+            StartY = box.Y + (box.Height / 2),
+            EndY = box.Y + (box.Height / 2),
             Stroke = new SvgColourServer(Color.Black),
             StrokeWidth = new SvgUnit(SvgUnitType.Millimeter, 0.2f),
         };
@@ -415,10 +413,10 @@ public class Maker : IMaker
 
         numberText.Y = new SvgUnitCollection
         {
-            new (SvgUnitType.Millimeter, 
-                box.Y.Value + 
+            new (SvgUnitType.Millimeter,
+                box.Y.Value +
                 extraMargin +
-                (float)(0.9 * PointSizeToMillimeters(Options.NumbersFont.PointSize)) + 
+                PointSizeToMillimeters(Options.NumbersFont.PointSize) +
                 (isOverflow ? box.Height.Value / 2 : 0))
         };
 
@@ -427,23 +425,16 @@ public class Maker : IMaker
 
     private float CalculateExtraMarginForRoundedCorners(float boxWidthMillimeters)
     {
-        switch (Options.BoxCornerMode)
+        return Options.BoxCornerMode switch
         {
-            case BoxCornerMode.Normal:
-            case BoxCornerMode.Merge:
-                return 0;
-            case BoxCornerMode.Rounded1:
-                return boxWidthMillimeters / 60;
-            case BoxCornerMode.Rounded2:
-                return boxWidthMillimeters / 50;
-            case BoxCornerMode.Rounded3:
-                return boxWidthMillimeters / 40;
-            case BoxCornerMode.Rounded4:
-                return boxWidthMillimeters / 30;
-
-            default:
-                throw new NotSupportedException();
-        }
+            BoxCornerMode.Normal => 0,
+            BoxCornerMode.Merge => 0,
+            BoxCornerMode.Rounded1 => boxWidthMillimeters / 60,
+            BoxCornerMode.Rounded2 => boxWidthMillimeters / 50,
+            BoxCornerMode.Rounded3 => boxWidthMillimeters / 40,
+            BoxCornerMode.Rounded4 => boxWidthMillimeters / 30,
+            _ => throw new NotSupportedException()
+        };
     }
 
     private void DrawMonthAndYear(SvgDocument doc)
@@ -518,7 +509,7 @@ public class Maker : IMaker
                 FontStyle = Options.DayNamesFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
                 FontWeight = Options.DayNamesFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
 
-                X = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.X.Value + box.Width.Value / 2) },
+                X = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.X.Value + (box.Width.Value / 2)) },
                 Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.Y.Value - ySpacer) },
 
                 TextAnchor = SvgTextAnchor.Middle
@@ -581,19 +572,15 @@ public class Maker : IMaker
 
     private SvgDocument CreateBlankDocument()
     {
-        switch (Options.PageSize)
+        return Options.PageSize switch
         {
-            case PageSize.A3:
-                return new A3LandscapeDocument(Options.DrawMargin, Options.XMarginMillimeters, Options.YMarginMillimeters);
-
-            case PageSize.A4:
-                return new A4LandscapeDocument(Options.DrawMargin, Options.XMarginMillimeters, Options.YMarginMillimeters);
-
-            case PageSize.A5:
-                return new A5LandscapeDocument(Options.DrawMargin, Options.XMarginMillimeters, Options.YMarginMillimeters);
-
-            default:
-                throw new NotSupportedException();
-        }
+            PageSize.A3 => new A3LandscapeDocument(
+                Options.DrawMargin, Options.XMarginMillimeters, Options.YMarginMillimeters),
+            PageSize.A4 => new A4LandscapeDocument(
+                Options.DrawMargin, Options.XMarginMillimeters, Options.YMarginMillimeters),
+            PageSize.A5 => new A5LandscapeDocument(
+                Options.DrawMargin, Options.XMarginMillimeters, Options.YMarginMillimeters),
+            _ => throw new NotSupportedException()
+        };
     }
 }

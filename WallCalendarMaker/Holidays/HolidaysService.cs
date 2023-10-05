@@ -3,37 +3,43 @@ using RestSharp;
 
 namespace WallCalendarMaker.Holidays;
 
-internal class HolidaysService
+internal static class HolidaysService
 {
-    public class DivAndEvents
+    public sealed class DivAndEvents
     {
-        public string Division { get; set; }
-        public List<AnEvent> Events { get; set; }
+        public string? Division { get; set; }
+
+        public List<AnEvent>? Events { get; set; }
     }
 
-    public class AnEvent
+    public sealed class AnEvent
     {
-        public string Title { get; set; }
+        public string? Title { get; set; }
+
         public DateTime Date { get; set; }
-        public string Notes { get; set; }
+
+        public string? Notes { get; set; }
+
         public bool Bunting { get; set; }
     }
 
-    public class Root
+    public sealed class Root
     {
         [JsonPropertyName("england-and-wales")]
-        public DivAndEvents EnglandAndWales { get; set; }
+        public DivAndEvents? EnglandAndWales { get; set; }
 
         [JsonPropertyName("scotland")]
-        public DivAndEvents Scotland { get; set; }
+        public DivAndEvents? Scotland { get; set; }
 
         [JsonPropertyName("northern-ireland")]
-        public DivAndEvents NorthernIreland { get; set; }
+        public DivAndEvents? NorthernIreland { get; set; }
     }
 
-    public async Task<Root?> ExecuteAsync(CancellationToken cancellationToken = default)
+    public static async Task<Root?> ExecuteAsync(CancellationToken cancellationToken = default)
     {
+#pragma warning disable S1075
         using var client = new RestClient("https://www.gov.uk/");
+#pragma warning restore S1075
 
         var request = new RestRequest("bank-holidays.json", Method.Get);
 

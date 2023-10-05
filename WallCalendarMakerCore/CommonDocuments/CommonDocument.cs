@@ -28,8 +28,8 @@ internal class CommonDocument : SvgDocument
         {
             X = new SvgUnit(SvgUnitType.Millimeter, xMarginMillimeters),
             Y = new SvgUnit(SvgUnitType.Millimeter, yMarginMillimeters),
-            Width = new SvgUnit(SvgUnitType.Millimeter, pageWidthMillimeters - 2 * xMarginMillimeters),
-            Height = new SvgUnit(SvgUnitType.Millimeter, pageHeightMillimeters - 2 * yMarginMillimeters),
+            Width = new SvgUnit(SvgUnitType.Millimeter, pageWidthMillimeters - (2 * xMarginMillimeters)),
+            Height = new SvgUnit(SvgUnitType.Millimeter, pageHeightMillimeters - (2 * yMarginMillimeters)),
             Stroke = new SvgColourServer(System.Drawing.Color.DeepSkyBlue),
             StrokeWidth = new SvgUnit(SvgUnitType.Pixel, 1),
             Fill = SvgPaintServer.None,
