@@ -7,5 +7,5 @@ public enum BoxCornerMode
     Rounded1,
     Rounded2,
     Rounded3,
-    Rounded4,
+    Rounded4
 }

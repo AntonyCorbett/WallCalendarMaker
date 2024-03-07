@@ -4,11 +4,17 @@ public class MakerOptions
 {
     public PageSize PageSize { get; set; } = PageSize.A4;
 
-    public int XMarginMillimeters { get; set; } = 12;
+    public int LMarginMillimeters { get; set; } = 12;
 
-    public int YMarginMillimeters { get; set; } = 12;
+    public int TMarginMillimeters { get; set; } = 12;
+
+    public int RMarginMillimeters { get; set; } = 12;
+
+    public int BMarginMillimeters { get; set; } = 12;
 
     public MonthDefinition MonthDefinition { get; set; } = new();
+
+    public bool AbbreviateDayNames { get; set; }
 
     public CalendarFont MonthFont { get; set; } = new()
     {
@@ -68,14 +74,24 @@ public class MakerOptions
             throw new ArgumentOutOfRangeException(nameof(MonthDefinition.Month), "Month must be between 1 and 12!");
         }
 
-        if (XMarginMillimeters < 0 || XMarginMillimeters > 50)
+        if (LMarginMillimeters < 0 || LMarginMillimeters > 50)
         {
-            throw new ArgumentOutOfRangeException(nameof(XMarginMillimeters), "XMarginMillimeters must be between 0 and 50!");
+            throw new ArgumentOutOfRangeException(nameof(LMarginMillimeters), "LMarginMillimeters must be between 0 and 50!");
         }
 
-        if (YMarginMillimeters < 0 || YMarginMillimeters > 50)
+        if (RMarginMillimeters < 0 || RMarginMillimeters > 50)
         {
-            throw new ArgumentOutOfRangeException(nameof(XMarginMillimeters), "YMarginMillimeters must be between 0 and 50!");
+            throw new ArgumentOutOfRangeException(nameof(RMarginMillimeters), "RMarginMillimeters must be between 0 and 50!");
+        }
+
+        if (TMarginMillimeters < 0 || TMarginMillimeters > 50)
+        {
+            throw new ArgumentOutOfRangeException(nameof(TMarginMillimeters), "TMarginMillimeters must be between 0 and 50!");
+        }
+
+        if (BMarginMillimeters < 0 || BMarginMillimeters > 50)
+        {
+            throw new ArgumentOutOfRangeException(nameof(BMarginMillimeters), "BMarginMillimeters must be between 0 and 50!");
         }
 
 #pragma warning restore S3928 // Parameter names used into ArgumentException constructors should match an existing one 

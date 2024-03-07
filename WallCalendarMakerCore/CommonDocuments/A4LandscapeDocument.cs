@@ -2,8 +2,8 @@
 
 internal sealed class A4LandscapeDocument : CommonDocument
 {
-    public A4LandscapeDocument(bool drawMargin, float xMarginMillimeters, float yMarginMillimeters)
-        : base(210F, 297F, drawMargin, xMarginMillimeters, yMarginMillimeters)
+    public A4LandscapeDocument(bool drawMargin, float lMarginMillimeters, float tMarginMillimeters, float rMarginMillimeters, float bMarginMillimeters)
+        : base(210F, 297F, drawMargin, lMarginMillimeters, tMarginMillimeters, rMarginMillimeters, bMarginMillimeters)
     {
     }
 }

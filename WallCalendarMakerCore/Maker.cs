@@ -33,11 +33,11 @@ public class Maker : IMaker
         var dayNameHeightMillimeters = GetDayNameHeightAllowanceMillimeters();
         var monthNameHeightMillimeters = GetMonthNameHeightAllowanceMillimeters();
 
-        var outlineBoxGroupWidth = doc.Width.Value - (2 * Options.XMarginMillimeters);
+        var outlineBoxGroupWidth = doc.Width.Value - Options.LMarginMillimeters - Options.RMarginMillimeters;
 
         var outlineBoxGroupHeight =
             doc.Height.Value -
-            (2 * Options.YMarginMillimeters) -
+            Options.TMarginMillimeters - Options.BMarginMillimeters -
             dayNameHeightMillimeters -
             monthNameHeightMillimeters;
 
@@ -397,7 +397,8 @@ public class Maker : IMaker
             FontSize = new SvgUnit(SvgUnitType.Point, Options.NumbersFont.PointSize),
             FontStyle = Options.NumbersFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
             FontWeight = Options.NumbersFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
-            TextAnchor = SvgTextAnchor.End
+            TextAnchor = SvgTextAnchor.End,
+            Fill = new SvgColourServer(Options.NumbersFont.Color),
         };
 
         var extraMargin = CalculateExtraMarginForRoundedCorners(box.Width.Value);
@@ -457,6 +458,7 @@ public class Maker : IMaker
             FontSize = new SvgUnit(SvgUnitType.Point, Options.MonthFont.PointSize),
             FontStyle = Options.MonthFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
             FontWeight = Options.MonthFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
+            Fill = new SvgColourServer(Options.MonthFont.Color),
         };
 
         var sYear = new SvgTextSpan
@@ -467,12 +469,13 @@ public class Maker : IMaker
             FontSize = new SvgUnit(SvgUnitType.Point, Options.YearFont.PointSize),
             FontStyle = Options.YearFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
             FontWeight = Options.YearFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
+            Fill = new SvgColourServer(Options.YearFont.Color),
         };
 
         var s = new SvgText
         {
             X = new SvgUnitCollection { new(SvgUnitType.Millimeter, doc.Width.Value / 2)},
-            Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, PointSizeToMillimeters(Options.MonthFont.PointSize) + Options.YMarginMillimeters) },
+            Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, PointSizeToMillimeters(Options.MonthFont.PointSize) + Options.TMarginMillimeters) },
             TextAnchor = SvgTextAnchor.Middle
         };
 
@@ -499,8 +502,10 @@ public class Maker : IMaker
         {
             var col = GetBoxColumn(box);
             var dayOfWeek = (int)CalculateDayOfWeek(col);
-            var dayOfWeekString = CultureInfo.CurrentCulture.DateTimeFormat.DayNames[dayOfWeek];
-
+            var dayOfWeekString = Options.AbbreviateDayNames
+                ? CultureInfo.CurrentCulture.DateTimeFormat.AbbreviatedDayNames[dayOfWeek]
+                : CultureInfo.CurrentCulture.DateTimeFormat.DayNames[dayOfWeek];
+            
             var s = new SvgText(dayOfWeekString)
             {
                 ID = $"DayName{dayOfWeek}", // do not localize day name here
@@ -508,6 +513,7 @@ public class Maker : IMaker
                 FontSize = new SvgUnit(SvgUnitType.Point, Options.DayNamesFont.PointSize),
                 FontStyle = Options.DayNamesFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
                 FontWeight = Options.DayNamesFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
+                Fill = new SvgColourServer(Options.DayNamesFont.Color),
 
                 X = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.X.Value + (box.Width.Value / 2)) },
                 Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.Y.Value - ySpacer) },
@@ -555,8 +561,8 @@ public class Maker : IMaker
         var result = new SvgRectangle
         {
             ID = "OutlineBox",
-            X = new SvgUnit(SvgUnitType.Millimeter, Options.XMarginMillimeters),
-            Y = new SvgUnit(SvgUnitType.Millimeter, Options.YMarginMillimeters + headerHeightMillimeterAllowance),
+            X = new SvgUnit(SvgUnitType.Millimeter, Options.LMarginMillimeters),
+            Y = new SvgUnit(SvgUnitType.Millimeter, Options.TMarginMillimeters + headerHeightMillimeterAllowance),
             Width = new SvgUnit(SvgUnitType.Millimeter, widthMillimeters),
             Height = new SvgUnit(SvgUnitType.Millimeter, heightMillimeters),
             Fill = new SvgColourServer(Color.DeepSkyBlue),
@@ -575,11 +581,11 @@ public class Maker : IMaker
         return Options.PageSize switch
         {
             PageSize.A3 => new A3LandscapeDocument(
-                Options.DrawMargin, Options.XMarginMillimeters, Options.YMarginMillimeters),
+                Options.DrawMargin, Options.LMarginMillimeters, Options.TMarginMillimeters, Options.RMarginMillimeters, Options.BMarginMillimeters),
             PageSize.A4 => new A4LandscapeDocument(
-                Options.DrawMargin, Options.XMarginMillimeters, Options.YMarginMillimeters),
+                Options.DrawMargin, Options.LMarginMillimeters, Options.TMarginMillimeters, Options.RMarginMillimeters, Options.BMarginMillimeters),
             PageSize.A5 => new A5LandscapeDocument(
-                Options.DrawMargin, Options.XMarginMillimeters, Options.YMarginMillimeters),
+                Options.DrawMargin, Options.LMarginMillimeters, Options.TMarginMillimeters, Options.RMarginMillimeters, Options.BMarginMillimeters),
             _ => throw new NotSupportedException()
         };
     }

@@ -8,8 +8,10 @@ internal class CommonDocument : SvgDocument
         float heightMillimeters,
         float widthMillimeters,
         bool drawMargin,
-        float xMarginMillimeters,
-        float yMarginMillimeters)
+        float lMarginMillimeters,
+        float tMarginMillimeters,
+        float rMarginMillimeters,
+        float bMarginMillimeters)
     {
         Ppi = 300;
 
@@ -18,18 +20,18 @@ internal class CommonDocument : SvgDocument
 
         if (drawMargin)
         {
-            DrawMargin(xMarginMillimeters, yMarginMillimeters, heightMillimeters, widthMillimeters);
+            DrawMargin(lMarginMillimeters, tMarginMillimeters, rMarginMillimeters, bMarginMillimeters, heightMillimeters, widthMillimeters);
         }
     }
 
-    protected void DrawMargin(float xMarginMillimeters, float yMarginMillimeters, float pageHeightMillimeters, float pageWidthMillimeters)
+    protected void DrawMargin(float lMarginMillimeters, float tMarginMillimeters, float rMarginMillimeters, float bMarginMillimeters, float pageHeightMillimeters, float pageWidthMillimeters)
     {
         Children.Add(new SvgRectangle
         {
-            X = new SvgUnit(SvgUnitType.Millimeter, xMarginMillimeters),
-            Y = new SvgUnit(SvgUnitType.Millimeter, yMarginMillimeters),
-            Width = new SvgUnit(SvgUnitType.Millimeter, pageWidthMillimeters - (2 * xMarginMillimeters)),
-            Height = new SvgUnit(SvgUnitType.Millimeter, pageHeightMillimeters - (2 * yMarginMillimeters)),
+            X = new SvgUnit(SvgUnitType.Millimeter, lMarginMillimeters),
+            Y = new SvgUnit(SvgUnitType.Millimeter, tMarginMillimeters),
+            Width = new SvgUnit(SvgUnitType.Millimeter, pageWidthMillimeters - lMarginMillimeters - rMarginMillimeters),
+            Height = new SvgUnit(SvgUnitType.Millimeter, pageHeightMillimeters - tMarginMillimeters - bMarginMillimeters),
             Stroke = new SvgColourServer(System.Drawing.Color.DeepSkyBlue),
             StrokeWidth = new SvgUnit(SvgUnitType.Pixel, 1),
             Fill = SvgPaintServer.None,
