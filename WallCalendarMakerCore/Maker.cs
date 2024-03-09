@@ -6,7 +6,7 @@ using WallCalendarMakerCore.CommonDocuments;
 
 namespace WallCalendarMakerCore;
 
-public class Maker : IMaker
+public class Maker : MakerBase, IMaker
 {
     public MakerOptions Options { get; } = new();
 
@@ -24,7 +24,13 @@ public class Maker : IMaker
     {
         Options.Validate();
 
-        var doc = CreateBlankDocument();
+        var doc = CreateBlankDocument(
+            Options.PageSize,
+            Options.DrawMargin,
+            Options.LMarginMillimeters,
+            Options.TMarginMillimeters,
+            Options.RMarginMillimeters,
+            Options.BMarginMillimeters);
 
         var boxGroup = new SvgGroup { ID = "BoxGroup" };
 
@@ -160,16 +166,6 @@ public class Maker : IMaker
     private float GetDayNameHeightAllowanceMillimeters()
     {
         return PointSizeToMillimeters(Options.DayNamesFont.PointSize);
-    }
-
-    private static float PointSizeToMillimeters(float pointSize)
-    {
-        return (float)((pointSize * 25.4) / 72.0);
-    }
-
-    private static float UnitSizeToMillimeters(float unitSize)
-    {
-        return (float) (unitSize * 25.4) / 96.0F;
     }
 
     private float GetMonthNameHeightAllowanceMillimeters()
@@ -575,19 +571,5 @@ public class Maker : IMaker
         }
 
         return result;
-    }
-
-    private SvgDocument CreateBlankDocument()
-    {
-        return Options.PageSize switch
-        {
-            PageSize.A3 => new A3LandscapeDocument(
-                Options.DrawMargin, Options.LMarginMillimeters, Options.TMarginMillimeters, Options.RMarginMillimeters, Options.BMarginMillimeters),
-            PageSize.A4 => new A4LandscapeDocument(
-                Options.DrawMargin, Options.LMarginMillimeters, Options.TMarginMillimeters, Options.RMarginMillimeters, Options.BMarginMillimeters),
-            PageSize.A5 => new A5LandscapeDocument(
-                Options.DrawMargin, Options.LMarginMillimeters, Options.TMarginMillimeters, Options.RMarginMillimeters, Options.BMarginMillimeters),
-            _ => throw new NotSupportedException()
-        };
     }
 }

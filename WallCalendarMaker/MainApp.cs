@@ -68,6 +68,33 @@ internal sealed class MainApp
                 maker.Generate($"calendar {month:D2}.svg");
             }
 
+            var yearMaker = new YearMaker(opts =>
+            {
+                // modify options here...
+
+                opts.YearDefinition.Year = 2025;
+                opts.LMarginMillimeters = 30;
+                opts.TMarginMillimeters = 10;
+                opts.RMarginMillimeters = 10;
+                opts.BMarginMillimeters = 10;
+
+                opts.DayNamesFont = new CalendarFont
+                {
+                    Name = "Playfair Display",
+                    Color = Color.FromArgb(71, 41, 6),
+                    Bold = true,
+                    PointSize = 11
+                };
+
+                opts.NumbersFont = new CalendarFont
+                {
+                    Name = "Source Code Pro",
+                    Color = Color.FromArgb(71, 41, 6),
+                    PointSize = 9
+                };
+            });
+
+            yearMaker.Generate($"year {yearMaker.Options.YearDefinition.Year}.svg");
             OnProgress("Completed", false);
         }
         catch (Exception ex)
