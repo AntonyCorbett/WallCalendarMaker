@@ -50,8 +50,6 @@ internal sealed class MainApp
                 opts.BoxCornerMode = BoxCornerMode.Rounded2;
 
                 opts.MonthDefinition.FirstDayOfWeek = DayOfWeek.Monday;
-                opts.MonthDefinition.Month = 1;
-                opts.MonthDefinition.Year = 2025;
                 opts.DrawMonth = false;
                 opts.DrawYear = false;
 
@@ -60,8 +58,16 @@ internal sealed class MainApp
                 opts.RMarginMillimeters = 10;
                 opts.BMarginMillimeters = 10;
             });
-            await AddHolidaysAsync(maker.Options, cancellationToken);
-            maker.Generate("calendar.svg");
+
+
+            for (int month = 1; month <= 12; ++month)
+            {
+                maker.Options.MonthDefinition.Month = month;
+                maker.Options.MonthDefinition.Year = 2025;
+                await AddHolidaysAsync(maker.Options, cancellationToken);
+                maker.Generate($"calendar {month:D2}.svg");
+            }
+
             OnProgress("Completed", false);
         }
         catch (Exception ex)
@@ -83,6 +89,8 @@ internal sealed class MainApp
     }
     private static async Task AddHolidaysAsync(MakerOptions makerOptions, CancellationToken cancellationToken)
     {
+        makerOptions.Occasions.Clear();
+
         foreach (var @event in
         (await GetHolidaysInMonthAsync(makerOptions, cancellationToken))
         .Where(ev => !string.IsNullOrWhiteSpace(ev.Title)))

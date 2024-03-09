@@ -552,11 +552,12 @@ public class Maker : IMaker
             Height = new SvgUnit(SvgUnitType.Millimeter, heightMillimeters - boxMargin),
             Fill = new SvgColourServer(Color.White),
             Stroke = new SvgColourServer(Color.Black),
-            StrokeWidth = new SvgUnit(SvgUnitType.Millimeter, 0.2f),
+            StrokeWidth = new SvgUnit(SvgUnitType.Point, 0.25f),
         };
     }
 
-    private SvgRectangle CreateOutlineBox(float widthMillimeters, float heightMillimeters, float headerHeightMillimeterAllowance)
+    private SvgRectangle CreateOutlineBox(
+        float widthMillimeters, float heightMillimeters, float headerHeightMillimeterAllowance)
     {
         var result = new SvgRectangle
         {
