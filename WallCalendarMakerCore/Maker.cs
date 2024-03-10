@@ -102,17 +102,9 @@ public class Maker : MakerBase, IMaker
             {
                 var s = occasion.Title.Trim();
 
-                var text = new SvgText(s)
-                {
-                    ID = $"Occasion{occasionNum++}",
-                    Font = occasion.Font.Name,
-                    FontSize = new SvgUnit(SvgUnitType.Point, occasion.Font.PointSize),
-                    FontStyle = occasion.Font.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
-                    FontWeight = occasion.Font.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
-                    Fill = new SvgColourServer(occasion.Font.Color),
-                    X = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.X.Value + (PointSizeToMillimeters(occasion.Font.PointSize)/2))},
-                    Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.Y.Value + box.Height.Value - 1) }
-                };
+                var text = GenerateText(s, occasion.Font, $"Occasion{occasionNum++}");
+                text.X = new SvgUnitCollection {new(SvgUnitType.Millimeter, box.X.Value + (PointSizeToMillimeters(occasion.Font.PointSize) / 2))};
+                text.Y = new SvgUnitCollection {new(SvgUnitType.Millimeter, box.Y.Value + box.Height.Value - 1)};
 
                 doc.Children.Add(text);
             }
@@ -387,19 +379,11 @@ public class Maker : MakerBase, IMaker
     private SvgText CreateDayNumberText(
         int dayNumber, SvgRectangle box, float boxMarginMillimeters, bool isOverflow)
     {
-        var numberText = new SvgText(dayNumber.ToString())
-        {
-            Font = Options.NumbersFont.Name,
-            FontSize = new SvgUnit(SvgUnitType.Point, Options.NumbersFont.PointSize),
-            FontStyle = Options.NumbersFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
-            FontWeight = Options.NumbersFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
-            TextAnchor = SvgTextAnchor.End,
-            Fill = new SvgColourServer(Options.NumbersFont.Color),
-        };
+        var numberText = GenerateText(dayNumber.ToString(), Options.NumbersFont, $"DayNumber{dayNumber}");
+        numberText.TextAnchor = SvgTextAnchor.End;
 
         var extraMargin = CalculateExtraMarginForRoundedCorners(box.Width.Value);
 
-        numberText.ID = $"DayNumber{dayNumber}";
         numberText.X = new SvgUnitCollection
         {
             new (SvgUnitType.Millimeter,
@@ -441,10 +425,10 @@ public class Maker : MakerBase, IMaker
             return;
         }
 
-        var monthString = CultureInfo.CurrentCulture.DateTimeFormat.MonthNames[Options.MonthDefinition.Month - 1];
+        var monthString = CultureInfo.InvariantCulture.DateTimeFormat.MonthNames[Options.MonthDefinition.Month - 1];
 
         var dt = new DateTime(Options.MonthDefinition.Year, Options.MonthDefinition.Month, 1, 0, 0, 0, DateTimeKind.Local);
-        var yearString = dt.ToString("yyyy", CultureInfo.CurrentCulture);
+        var yearString = dt.ToString("yyyy", CultureInfo.InvariantCulture);
 
         var sMonth = new SvgTextSpan
         {
@@ -499,25 +483,15 @@ public class Maker : MakerBase, IMaker
             var col = GetBoxColumn(box);
             var dayOfWeek = (int)CalculateDayOfWeek(col);
             var dayOfWeekString = Options.AbbreviateDayNames
-                ? CultureInfo.CurrentCulture.DateTimeFormat.AbbreviatedDayNames[dayOfWeek]
-                : CultureInfo.CurrentCulture.DateTimeFormat.DayNames[dayOfWeek];
-            
-            var s = new SvgText(dayOfWeekString)
-            {
-                ID = $"DayName{dayOfWeek}", // do not localize day name here
-                Font = Options.DayNamesFont.Name,
-                FontSize = new SvgUnit(SvgUnitType.Point, Options.DayNamesFont.PointSize),
-                FontStyle = Options.DayNamesFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
-                FontWeight = Options.DayNamesFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
-                Fill = new SvgColourServer(Options.DayNamesFont.Color),
+                ? CultureInfo.InvariantCulture.DateTimeFormat.AbbreviatedDayNames[dayOfWeek]
+                : CultureInfo.InvariantCulture.DateTimeFormat.DayNames[dayOfWeek];
 
-                X = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.X.Value + (box.Width.Value / 2)) },
-                Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, box.Y.Value - ySpacer) },
-
-                TextAnchor = SvgTextAnchor.Middle
-            };
-
-        group.Children.Add(s);
+            var s = GenerateText(dayOfWeekString, Options.DayNamesFont, $"DayName{dayOfWeek}");
+            s.X = new SvgUnitCollection {new(SvgUnitType.Millimeter, box.X.Value + (box.Width.Value / 2))};
+            s.Y = new SvgUnitCollection {new(SvgUnitType.Millimeter, box.Y.Value - ySpacer)};
+            s.TextAnchor = SvgTextAnchor.Middle;
+        
+            group.Children.Add(s);
         }
 
         doc.Children.Add(group);

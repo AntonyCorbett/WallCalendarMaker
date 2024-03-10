@@ -1,4 +1,6 @@
-﻿namespace WallCalendarMakerCore;
+﻿using System.Drawing;
+
+namespace WallCalendarMakerCore;
 
 public class YearMakerOptions
 {
@@ -12,7 +14,16 @@ public class YearMakerOptions
 
     public int BMarginMillimeters { get; set; } = 12;
 
-    public MonthDefinition YearDefinition { get; set; } = new();
+    public YearDefinition YearDefinition { get; set; } = new();
+
+    public Color MonthHeaderBackgroundColor { get; set; } = Color.DimGray;
+
+    public CalendarFont MonthNamesFont { get; set; } = new()
+    {
+        Name = "Arial",
+        PointSize = 14.0F,
+        Color = Color.White,
+    };
 
     public CalendarFont DayNamesFont { get; set; } = new()
     {

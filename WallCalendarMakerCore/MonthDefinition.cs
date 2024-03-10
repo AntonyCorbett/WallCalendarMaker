@@ -6,7 +6,7 @@ public class MonthDefinition
 
     public int Month { get; set; } = DateTime.Today.Month;
 
-    public DayOfWeek FirstDayOfWeek { get; set; } = DayOfWeek.Sunday;
+    public DayOfWeek FirstDayOfWeek { get; set; } = DayOfWeek.Monday;
 
     public void Validate()
     {

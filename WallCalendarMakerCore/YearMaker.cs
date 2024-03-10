@@ -1,5 +1,6 @@
-﻿using System.Drawing;
-using System.Security.Cryptography;
+﻿using System.Diagnostics.Contracts;
+using System.Drawing;
+using System.Globalization;
 using Svg;
 
 namespace WallCalendarMakerCore;
@@ -47,6 +48,63 @@ public class YearMaker : MakerBase, IYearMaker
 
     private void PopulateCalendarBox(SvgRectangle box, int month)
     {
+        PopulateMonthName(box, month);
+        PopulateDayNames(box);
+        PopulateWithDayNumbers(box, month);
+    }
+
+    private void PopulateDayNames(SvgRectangle box)
+    {
+        var firstDow = (int)Options.YearDefinition.FirstDayOfWeek;
+        var lastDow = (firstDow + 6) % 7;
+
+        var yOffset = box.Height.Value * 0.25F;
+
+        const int colCount = 7;
+        var colWidth = box.Width.Value / colCount;
+
+        var dow = firstDow;
+        var col = 0;
+        do
+        {
+            var s = CultureInfo.InvariantCulture.DateTimeFormat.DayNames[dow].Substring(0, 1);
+            var text = GenerateText(s, Options.DayNamesFont);
+            text.TextAnchor = SvgTextAnchor.Middle;
+            
+            var x = box.X.Value + (col * colWidth) + (colWidth / 2);
+            var y = box.Y.Value + yOffset;
+
+            text.X = new SvgUnitCollection { new(SvgUnitType.Millimeter, x) };
+            text.Y = new SvgUnitCollection { new(SvgUnitType.Millimeter, y) };
+
+            box.Children.Add(text);
+            
+            ++col;
+            dow = (dow + 1) % 7;
+        } while (dow != firstDow);
+    }
+
+    private void PopulateMonthName(SvgRectangle box, int month)
+    {
+        var heightAvailable = box.Height.Value * 0.1F; 
+
+        var monthName = CultureInfo.InvariantCulture.DateTimeFormat.MonthNames[month - 1];
+        var monthText = GenerateMonthName(monthName, box.X.Value + box.Width.Value / 2, box.Y.Value + heightAvailable);
+        var rect = new SvgRectangle
+        {
+            X = new SvgUnit(SvgUnitType.Millimeter, box.X.Value),
+            Y = new SvgUnit(SvgUnitType.Millimeter, box.Y.Value),
+            Width = box.Width,
+            Height = new SvgUnit(SvgUnitType.Millimeter, heightAvailable * 1.5F),
+            Fill = new SvgColourServer(Options.MonthHeaderBackgroundColor),
+        };
+        
+        box.Children.Add(rect);
+        box.Children.Add(monthText);
+    }
+
+    private void PopulateWithDayNumbers(SvgRectangle box, int month)
+    {
         const int rowCount = 6;
         const int colCount = 7;
 
@@ -65,8 +123,8 @@ public class YearMaker : MakerBase, IYearMaker
             var col = GetCol(theDate.DayOfWeek);
             var row = GetRow(startingCol, colCount, startingDate, theDate);
 
-            var x = ((col + 1) * colWidth) + box.X.Value;
-            var y = (row * rowHeight) + box.Y.Value + yOffset;
+            var x = box.X.Value + (col * colWidth) + (colWidth / 2);
+            var y = box.Y.Value + yOffset + (row * rowHeight) + (rowHeight / 2);
             var number = GenerateDayNumber(theDate, x, y);
 
             box.Children.Add(number);
@@ -77,15 +135,26 @@ public class YearMaker : MakerBase, IYearMaker
 
     private SvgText GenerateDayNumber(DateTime theDate, float x, float y)
     {
-        var numberText = new SvgText(theDate.Day.ToString())
+        var numberText = GenerateText(theDate.Day.ToString(), Options.NumbersFont);
+        numberText.TextAnchor = SvgTextAnchor.Middle;
+        
+        numberText.X = new SvgUnitCollection
         {
-            Font = Options.NumbersFont.Name,
-            FontSize = new SvgUnit(SvgUnitType.Point, Options.NumbersFont.PointSize),
-            FontStyle = Options.NumbersFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
-            FontWeight = Options.NumbersFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
-            TextAnchor = SvgTextAnchor.Middle,
-            Fill = new SvgColourServer(Options.NumbersFont.Color),
+            new (SvgUnitType.Millimeter, x)
         };
+
+        numberText.Y = new SvgUnitCollection
+        {
+            new (SvgUnitType.Millimeter, y)
+        };
+
+        return numberText;
+    }
+
+    private SvgText GenerateMonthName(string monthName, float x, float y)
+    {
+        var numberText = GenerateText(monthName, Options.MonthNamesFont);
+        numberText.TextAnchor = SvgTextAnchor.Middle;
 
         numberText.X = new SvgUnitCollection
         {
@@ -108,17 +177,25 @@ public class YearMaker : MakerBase, IYearMaker
 
     private int GetCol(DayOfWeek dow)
     {
-        return dow switch
+        switch (Options.YearDefinition.FirstDayOfWeek)
         {
-            DayOfWeek.Monday => 0,
-            DayOfWeek.Tuesday => 1,
-            DayOfWeek.Wednesday => 2,
-            DayOfWeek.Thursday => 3,
-            DayOfWeek.Friday => 4,
-            DayOfWeek.Saturday => 5,
-            DayOfWeek.Sunday => 6,
-            _ => throw new ArgumentOutOfRangeException(nameof(dow), dow, null)
-        };
+            case DayOfWeek.Sunday:
+                return ((int)dow % 7);
+            case DayOfWeek.Monday:
+                return (int)(dow + 6) % 7;
+            case DayOfWeek.Tuesday:
+                return (int)(dow + 5) % 7;
+            case DayOfWeek.Wednesday:
+                return (int)(dow + 4) % 7;
+            case DayOfWeek.Thursday:
+                return (int)(dow + 3) % 7;
+            case DayOfWeek.Friday:
+                return (int)(dow + 2) % 7;
+            case DayOfWeek.Saturday:
+                return (int)(dow + 1) % 7;
+            default:
+                throw new NotSupportedException("Unknown day!");
+        }
     }
 
     private IEnumerable<SvgRectangle> CreateCalendarBoxes(
@@ -169,11 +246,11 @@ public class YearMaker : MakerBase, IYearMaker
             Y = new SvgUnit(SvgUnitType.Millimeter, yMillimeters),
             Width = new SvgUnit(SvgUnitType.Millimeter, widthHeightMillimeters),
             Height = new SvgUnit(SvgUnitType.Millimeter, widthHeightMillimeters),
-            Fill = new SvgColourServer(Color.DeepSkyBlue),
+            Stroke = new SvgColourServer(Options.MonthHeaderBackgroundColor),
+            StrokeWidth = new SvgUnit(SvgUnitType.Pixel, 0.5F),
+            Fill = new SvgColourServer(Color.White),
         };
 
-        // result.Display = "none";
-        
         return result;
     }
 

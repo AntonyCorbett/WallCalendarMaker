@@ -14,6 +14,17 @@ internal static class HolidaysService
 
     public sealed class AnEvent
     {
+        public AnEvent()
+        {
+            
+        }
+
+        public AnEvent(DateTime theDate, string title)
+        {
+            Date = theDate;
+            Title = title;
+        }
+
         public string? Title { get; set; }
 
         public DateTime Date { get; set; }

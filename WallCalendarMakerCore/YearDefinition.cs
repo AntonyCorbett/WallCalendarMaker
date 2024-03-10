@@ -4,7 +4,7 @@ public class YearDefinition
 {
     public int Year { get; set; } = DateTime.Today.Year;
 
-    public DayOfWeek FirstDayOfWeek { get; set; } = DayOfWeek.Sunday;
+    public DayOfWeek FirstDayOfWeek { get; set; } = DayOfWeek.Monday;
 
     public void Validate()
     {

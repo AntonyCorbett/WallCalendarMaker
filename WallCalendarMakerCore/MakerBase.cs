@@ -1,4 +1,5 @@
-﻿using Svg;
+﻿using Microsoft.VisualBasic;
+using Svg;
 using WallCalendarMakerCore.CommonDocuments;
 
 namespace WallCalendarMakerCore;
@@ -27,6 +28,21 @@ public class MakerBase
             PageSize.A5 => new A5LandscapeDocument(
                 drawMargin, lMarginMillimeters, tMarginMillimeters, rMarginMillimeters, bMarginMillimeters),
             _ => throw new NotSupportedException()
+        };
+    }
+
+    protected SvgText GenerateText(string text, CalendarFont font, string? id = null)
+    {
+        return new SvgText(text)
+        {
+            ID = id,
+            Font = font.Name,
+            FontSize = new SvgUnit(SvgUnitType.Point, font.PointSize),
+            FontStyle = font.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
+            FontWeight = font.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
+            Fill = new SvgColourServer(font.Color),
+            Stroke = SvgPaintServer.None,
+            StrokeWidth = 0,
         };
     }
 }
