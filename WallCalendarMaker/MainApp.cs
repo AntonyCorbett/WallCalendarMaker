@@ -57,12 +57,7 @@ internal sealed class MainApp
             });
 
 
-            var standardOccasionFont = new CalendarFont
-            {
-                Name = "Barlow Condensed",
-                PointSize = 8.0F,
-                Color = Color.DimGray
-            };
+            var standardOccasionFont = CreateOccasionFont(Color.DimGray);
 
             for (int month = 1; month <= 12; ++month)
             {
@@ -145,14 +140,19 @@ internal sealed class MainApp
         OnProgress(new ProgressEventArgs(message, verbose));
     }
 
+    private static CalendarFont CreateOccasionFont(Color color)
+    {
+        return new CalendarFont
+        {
+            Name = "Franklin Gothic Book",
+            PointSize = 9.0F,
+            Color = color,
+        };
+    }
+
     private static void AddSpecialDays(MakerOptions makerOptions, CalendarFont standardFont)
     {
-        var foafFont = new CalendarFont
-        {
-            Name = "Barlow Condensed",
-            PointSize = 8.0F,
-            Color = Color.FromArgb(97, 126, 55),
-        };
+        var foafFont = CreateOccasionFont(Color.FromArgb(97, 126, 55));
 
         var specialMiscDays = GetSpecialMiscDays(makerOptions.MonthDefinition.Year)
             .Where(x => x.Date.Year == makerOptions.MonthDefinition.Year && 
