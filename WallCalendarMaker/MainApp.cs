@@ -1,5 +1,4 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using Serilog;
 using WallCalendarMaker.EventArguments;
 using WallCalendarMaker.Holidays;
@@ -175,11 +174,11 @@ internal sealed class MainApp
 
     private static IEnumerable<HolidaysService.AnEvent> GetSpecialFoafDays(int year)
     {
-        yield return new HolidaysService.AnEvent(new DateTime(2025, 4, 20), "FOAF Bird Walk (provisional)");
-        yield return new HolidaysService.AnEvent(new DateTime(2025, 5, 17), "FOAF Tree Walk (provisional)");
-        yield return new HolidaysService.AnEvent(new DateTime(2025, 6, 21), "FOAF Meadow Walk (provisional)");
-        yield return new HolidaysService.AnEvent(new DateTime(2025, 7, 16), "FOAF Bat Walk (provisional)");
-        yield return new HolidaysService.AnEvent(new DateTime(2025, 8, 8), "FOAF Moth Evening (provisional)");
+        yield return new HolidaysService.AnEvent(new DateTime(2025, 4, 20), "FOAF Bird Walk");
+        yield return new HolidaysService.AnEvent(new DateTime(2025, 5, 17), "FOAF Tree Walk");
+        yield return new HolidaysService.AnEvent(new DateTime(2025, 6, 21), "FOAF Meadow Walk");
+        yield return new HolidaysService.AnEvent(new DateTime(2025, 7, 16), "FOAF Bat Walk");
+        yield return new HolidaysService.AnEvent(new DateTime(2025, 8, 8), "FOAF Moth Evening");
 
         foreach (var item in GetFirstSaturdayLitterPicks(year))
         {
@@ -190,6 +189,21 @@ internal sealed class MainApp
     private static IEnumerable<HolidaysService.AnEvent> GetSpecialMiscDays(int year)
     {
         yield return GetLionsGrandShow(year);
+        foreach (var ev in GetRunnersEvents())
+        {
+            yield return ev;
+        }
+    }
+
+    private static IEnumerable<HolidaysService.AnEvent> GetRunnersEvents()
+    {
+        // 4th May – Mayday Mile in Abbey Fields
+        // 8th June – Two Castles Run 2025, Warwick to Kenilworth Castle
+        // 14th September – Kenilworth Half Marathon, inc Kenilworth Castle
+        
+        yield return new HolidaysService.AnEvent(new DateTime(2025, 5, 4), "Mayday Mile");
+        yield return new HolidaysService.AnEvent(new DateTime(2025, 6, 8), "Two Castles Run");
+        yield return new HolidaysService.AnEvent(new DateTime(2025, 9, 14), "Half Marathon");
     }
 
     private static HolidaysService.AnEvent GetLionsGrandShow(int year)
