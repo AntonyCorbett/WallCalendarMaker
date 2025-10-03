@@ -30,15 +30,17 @@ internal sealed class MainApp
                 // modify options here...
                 opts.DayNamesFont = new CalendarFont
                 {
-                    Name = "Playfair Display",
+                    Name = "Fraunces",
                     Color = Color.FromArgb(71, 41, 6),
+                    Weight = CalendarFontWeight.W100,
                     PointSize = 17
                 };
 
                 opts.NumbersFont = new CalendarFont
                 {
-                    Name = "Playfair Display",
+                    Name = "Fraunces",
                     Color = Color.FromArgb(97, 126, 55),
+                    Weight = CalendarFontWeight.W100,
                     PointSize = 14
                 };
 
@@ -50,7 +52,7 @@ internal sealed class MainApp
                 opts.DrawYear = false;
 
                 opts.LMarginMillimeters = 35;
-                opts.TMarginMillimeters = 12;
+                opts.TMarginMillimeters = 22;
                 opts.RMarginMillimeters = 10;
                 opts.BMarginMillimeters = 10;
             });
@@ -63,7 +65,7 @@ internal sealed class MainApp
                 maker.Options.Occasions.Clear();
 
                 maker.Options.MonthDefinition.Month = month;
-                maker.Options.MonthDefinition.Year = 2025;
+                maker.Options.MonthDefinition.Year = 2026;
 
                 await AddHolidaysAsync(maker.Options, standardOccasionFont, cancellationToken);
                 AddSpecialDays(maker.Options, standardOccasionFont);
@@ -100,9 +102,9 @@ internal sealed class MainApp
 
             opts.DayNamesFont = new CalendarFont
             {
-                Name = "Playfair Display",
+                Name = "Fraunces",
                 Color = Color.FromArgb(71, 41, 6),
-                Bold = true,
+                Weight = CalendarFontWeight.W700,
                 PointSize = 12
             };
 
@@ -112,9 +114,9 @@ internal sealed class MainApp
 
             opts.MonthNamesFont = new CalendarFont
             {
-                Name = "Playfair Display",
+                Name = "Fraunces",
                 Color = Color.White,
-                Bold = true,
+                Weight = CalendarFontWeight.W600,
                 PointSize = 12
             };
 
@@ -122,6 +124,7 @@ internal sealed class MainApp
             {
                 Name = "Source Code Pro",
                 Color = Color.FromArgb(97, 126, 55),
+                Weight = CalendarFontWeight.Normal,
                 PointSize = 9
             };
         });
@@ -143,33 +146,33 @@ internal sealed class MainApp
     {
         return new CalendarFont
         {
-            Name = "Franklin Gothic Book",
+            Name = "Inter",
             PointSize = 9.0F,
             Color = color,
         };
     }
 
-    private static void AddSpecialDays(MakerOptions makerOptions, CalendarFont standardFont)
+    private static void AddSpecialDays(MakerOptions makerOptions, CalendarFont font)
     {
-        var foafFont = CreateOccasionFont(Color.FromArgb(97, 126, 55));
-
         var specialMiscDays = GetSpecialMiscDays(makerOptions.MonthDefinition.Year)
             .Where(x => x.Date.Year == makerOptions.MonthDefinition.Year && 
                         x.Date.Month == makerOptions.MonthDefinition.Month);
 
         foreach (var specialDay in specialMiscDays)
         {
-            AddOccasion(makerOptions.Occasions, specialDay.Date, specialDay.Title!, standardFont);
+            AddOccasion(makerOptions.Occasions, specialDay.Date, specialDay.Title!, font);
         }
 
-        var specialFoafDays = GetSpecialFoafDays(makerOptions.MonthDefinition.Year)
-            .Where(x => x.Date.Year == makerOptions.MonthDefinition.Year &&
-                        x.Date.Month == makerOptions.MonthDefinition.Month);
+        //var foafFont = CreateOccasionFont(Color.FromArgb(97, 126, 55));
 
-        foreach (var specialDay in specialFoafDays)
-        {
-            AddOccasion(makerOptions.Occasions, specialDay.Date, specialDay.Title!, foafFont);
-        }
+        //var specialFoafDays = GetSpecialFoafDays(makerOptions.MonthDefinition.Year)
+        //    .Where(x => x.Date.Year == makerOptions.MonthDefinition.Year &&
+        //                x.Date.Month == makerOptions.MonthDefinition.Month);
+
+        //foreach (var specialDay in specialFoafDays)
+        //{
+        //    AddOccasion(makerOptions.Occasions, specialDay.Date, specialDay.Title!, foafFont);
+        //}
     }
 
     private static IEnumerable<HolidaysService.AnEvent> GetSpecialFoafDays(int year)
@@ -203,7 +206,7 @@ internal sealed class MainApp
         
         yield return new HolidaysService.AnEvent(new DateTime(2025, 5, 4), "Mayday Mile");
         yield return new HolidaysService.AnEvent(new DateTime(2025, 6, 8), "Two Castles Run");
-        yield return new HolidaysService.AnEvent(new DateTime(2025, 9, 14), "Half Marathon");
+        yield return new HolidaysService.AnEvent(new DateTime(2026, 9, 6), "Half Marathon");
     }
 
     private static HolidaysService.AnEvent GetLionsGrandShow(int year)

@@ -8,7 +8,7 @@ public class CalendarFont
 
     public float PointSize { get; set; }
 
-    public bool Bold { get; set; }
+    public CalendarFontWeight Weight { get; set; }
 
     public bool Italic { get; set; }
 

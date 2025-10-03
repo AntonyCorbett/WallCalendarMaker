@@ -434,10 +434,10 @@ public class Maker : MakerBase, IMaker
         {
             Text = monthString + (Options.DrawYear ? " " : ""),
             ID = "MonthName",
-            Font = Options.MonthFont.Name,
+            FontFamily = Options.MonthFont.Name,
             FontSize = new SvgUnit(SvgUnitType.Point, Options.MonthFont.PointSize),
             FontStyle = Options.MonthFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
-            FontWeight = Options.MonthFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
+            FontWeight = Options.MonthFont.Weight.ToSvgFontWeight(),
             Fill = new SvgColourServer(Options.MonthFont.Color),
         };
 
@@ -445,10 +445,10 @@ public class Maker : MakerBase, IMaker
         {
             Text = yearString,
             ID = "Year",
-            Font = Options.YearFont.Name,
+            FontFamily = Options.YearFont.Name,
             FontSize = new SvgUnit(SvgUnitType.Point, Options.YearFont.PointSize),
             FontStyle = Options.YearFont.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
-            FontWeight = Options.YearFont.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
+            FontWeight = Options.YearFont.Weight.ToSvgFontWeight(),
             Fill = new SvgColourServer(Options.YearFont.Color),
         };
 

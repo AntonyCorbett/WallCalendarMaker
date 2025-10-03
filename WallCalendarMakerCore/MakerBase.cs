@@ -36,10 +36,11 @@ public class MakerBase
         return new SvgText(text)
         {
             ID = id,
-            Font = font.Name,
+            // Use FontFamily rather than shorthand so separate attributes persist.
+            FontFamily = font.Name,
             FontSize = new SvgUnit(SvgUnitType.Point, font.PointSize),
             FontStyle = font.Italic ? SvgFontStyle.Italic : SvgFontStyle.Normal,
-            FontWeight = font.Bold ? SvgFontWeight.Bold : SvgFontWeight.Normal,
+            FontWeight = font.Weight.ToSvgFontWeight(),
             Fill = new SvgColourServer(font.Color),
             Stroke = SvgPaintServer.None,
             StrokeWidth = 0,
